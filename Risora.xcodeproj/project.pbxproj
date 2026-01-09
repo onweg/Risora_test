@@ -24,9 +24,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		2CB7D6922F1140D200A7185E /* test2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = test2.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		2CB7D6A72F1140D400A7185E /* test2Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = test2Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		2CB7D6B12F1140D400A7185E /* test2UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = test2UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2CB7D6922F1140D200A7185E /* Risora.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Risora.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2CB7D6A72F1140D400A7185E /* RisoraTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RisoraTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2CB7D6B12F1140D400A7185E /* RisoraUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RisoraUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -85,9 +85,9 @@
 		2CB7D6932F1140D200A7185E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				2CB7D6922F1140D200A7185E /* test2.app */,
-				2CB7D6A72F1140D400A7185E /* test2Tests.xctest */,
-				2CB7D6B12F1140D400A7185E /* test2UITests.xctest */,
+				2CB7D6922F1140D200A7185E /* Risora.app */,
+				2CB7D6A72F1140D400A7185E /* RisoraTests.xctest */,
+				2CB7D6B12F1140D400A7185E /* RisoraUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,9 +95,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		2CB7D6912F1140D200A7185E /* test2 */ = {
+		2CB7D6912F1140D200A7185E /* Risora */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2CB7D6BB2F1140D400A7185E /* Build configuration list for PBXNativeTarget "test2" */;
+			buildConfigurationList = 2CB7D6BB2F1140D400A7185E /* Build configuration list for PBXNativeTarget "Risora" */;
 			buildPhases = (
 				2CB7D68E2F1140D200A7185E /* Sources */,
 				2CB7D68F2F1140D200A7185E /* Frameworks */,
@@ -110,16 +110,16 @@
 			fileSystemSynchronizedGroups = (
 				2CB7D6942F1140D200A7185E /* test2 */,
 			);
-			name = test2;
+			name = Risora;
 			packageProductDependencies = (
 			);
 			productName = test2;
-			productReference = 2CB7D6922F1140D200A7185E /* test2.app */;
+			productReference = 2CB7D6922F1140D200A7185E /* Risora.app */;
 			productType = "com.apple.product-type.application";
 		};
-		2CB7D6A62F1140D400A7185E /* test2Tests */ = {
+		2CB7D6A62F1140D400A7185E /* RisoraTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2CB7D6BE2F1140D400A7185E /* Build configuration list for PBXNativeTarget "test2Tests" */;
+			buildConfigurationList = 2CB7D6BE2F1140D400A7185E /* Build configuration list for PBXNativeTarget "RisoraTests" */;
 			buildPhases = (
 				2CB7D6A32F1140D400A7185E /* Sources */,
 				2CB7D6A42F1140D400A7185E /* Frameworks */,
@@ -133,16 +133,16 @@
 			fileSystemSynchronizedGroups = (
 				2CB7D6AA2F1140D400A7185E /* test2Tests */,
 			);
-			name = test2Tests;
+			name = RisoraTests;
 			packageProductDependencies = (
 			);
 			productName = test2Tests;
-			productReference = 2CB7D6A72F1140D400A7185E /* test2Tests.xctest */;
+			productReference = 2CB7D6A72F1140D400A7185E /* RisoraTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		2CB7D6B02F1140D400A7185E /* test2UITests */ = {
+		2CB7D6B02F1140D400A7185E /* RisoraUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2CB7D6C12F1140D400A7185E /* Build configuration list for PBXNativeTarget "test2UITests" */;
+			buildConfigurationList = 2CB7D6C12F1140D400A7185E /* Build configuration list for PBXNativeTarget "RisoraUITests" */;
 			buildPhases = (
 				2CB7D6AD2F1140D400A7185E /* Sources */,
 				2CB7D6AE2F1140D400A7185E /* Frameworks */,
@@ -156,11 +156,11 @@
 			fileSystemSynchronizedGroups = (
 				2CB7D6B42F1140D400A7185E /* test2UITests */,
 			);
-			name = test2UITests;
+			name = RisoraUITests;
 			packageProductDependencies = (
 			);
 			productName = test2UITests;
-			productReference = 2CB7D6B12F1140D400A7185E /* test2UITests.xctest */;
+			productReference = 2CB7D6B12F1140D400A7185E /* RisoraUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -186,7 +186,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 2CB7D68D2F1140D200A7185E /* Build configuration list for PBXProject "test2" */;
+			buildConfigurationList = 2CB7D68D2F1140D200A7185E /* Build configuration list for PBXProject "Risora" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -200,9 +200,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				2CB7D6912F1140D200A7185E /* test2 */,
-				2CB7D6A62F1140D400A7185E /* test2Tests */,
-				2CB7D6B02F1140D400A7185E /* test2UITests */,
+				2CB7D6912F1140D200A7185E /* Risora */,
+				2CB7D6A62F1140D400A7185E /* RisoraTests */,
+				2CB7D6B02F1140D400A7185E /* RisoraUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -258,12 +258,12 @@
 /* Begin PBXTargetDependency section */
 		2CB7D6A92F1140D400A7185E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 2CB7D6912F1140D200A7185E /* test2 */;
+			target = 2CB7D6912F1140D200A7185E /* Risora */;
 			targetProxy = 2CB7D6A82F1140D400A7185E /* PBXContainerItemProxy */;
 		};
 		2CB7D6B32F1140D400A7185E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 2CB7D6912F1140D200A7185E /* test2 */;
+			target = 2CB7D6912F1140D200A7185E /* Risora */;
 			targetProxy = 2CB7D6B22F1140D400A7185E /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -409,7 +409,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "-.test2";
+				PRODUCT_BUNDLE_IDENTIFIER = com.onweg.risora;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -438,7 +438,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "-.test2";
+				PRODUCT_BUNDLE_IDENTIFIER = com.onweg.risora;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -461,7 +461,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/test2.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/test2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Risora.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Risora";
 			};
 			name = Debug;
 		};
@@ -480,7 +480,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/test2.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/test2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Risora.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Risora";
 			};
 			name = Release;
 		};
@@ -521,7 +521,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		2CB7D68D2F1140D200A7185E /* Build configuration list for PBXProject "test2" */ = {
+		2CB7D68D2F1140D200A7185E /* Build configuration list for PBXProject "Risora" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2CB7D6B92F1140D400A7185E /* Debug */,
@@ -530,7 +530,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2CB7D6BB2F1140D400A7185E /* Build configuration list for PBXNativeTarget "test2" */ = {
+		2CB7D6BB2F1140D400A7185E /* Build configuration list for PBXNativeTarget "Risora" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2CB7D6BC2F1140D400A7185E /* Debug */,
@@ -539,7 +539,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2CB7D6BE2F1140D400A7185E /* Build configuration list for PBXNativeTarget "test2Tests" */ = {
+		2CB7D6BE2F1140D400A7185E /* Build configuration list for PBXNativeTarget "RisoraTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2CB7D6BF2F1140D400A7185E /* Debug */,
@@ -548,7 +548,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2CB7D6C12F1140D400A7185E /* Build configuration list for PBXNativeTarget "test2UITests" */ = {
+		2CB7D6C12F1140D400A7185E /* Build configuration list for PBXNativeTarget "RisoraUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2CB7D6C22F1140D400A7185E /* Debug */,

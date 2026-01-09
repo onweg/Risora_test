@@ -1,9 +1,46 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1" systemVersion="11A491" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="false" userDefinedModelVersionIdentifier="">
+    <entity name="Habit" representedClassName="Habit" syncable="YES" codeGenerationType="class">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dailyTarget" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="deletedFromDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="proportionalReward" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="targetType" optional="YES" attributeType="String"/>
+        <attribute name="targetValue" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="weeklyTarget" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="xpValue" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="completions" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="HabitCompletion" inverseName="habit" inverseEntity="HabitCompletion"/>
+    </entity>
+    <entity name="HabitCompletion" representedClassName="HabitCompletion" syncable="YES" codeGenerationType="class">
+        <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="weekStartDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="habit" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Habit" inverseName="completions" inverseEntity="Habit"/>
+    </entity>
+    <entity name="GameState" representedClassName="GameState" syncable="YES" codeGenerationType="class">
+        <attribute name="currentLives" optional="YES" attributeType="Integer 16" defaultValueString="100" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isGameOver" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastWeekCalculationDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="LifePoint" representedClassName="LifePoint" syncable="YES" codeGenerationType="class">
+        <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="value" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="weekStartDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
     <entity name="Item" representedClassName="Item" syncable="YES" codeGenerationType="class">
         <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
     </entity>
     <elements>
-        <element name="Item" positionX="-63" positionY="-18" width="128" height="44"/>
+        <element name="GameState" positionX="-63" positionY="9" width="128" height="89"/>
+        <element name="Habit" positionX="-54" positionY="-18" width="128" height="179"/>
+        <element name="HabitCompletion" positionX="81" positionY="-18" width="128" height="89"/>
+        <element name="Item" positionX="-63" positionY="117" width="128" height="44"/>
+        <element name="LifePoint" positionX="81" positionY="9" width="128" height="89"/>
     </elements>
 </model>
