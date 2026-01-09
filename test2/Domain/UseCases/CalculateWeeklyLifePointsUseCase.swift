@@ -32,52 +32,98 @@ class CalculateWeeklyLifePointsUseCase: CalculateWeeklyLifePointsUseCaseProtocol
                 let dailyCompletions = habitRepository.getDailyCompletionsForWeek(habitId: habit.id, weekStartDate: weekStartDate)
                 var totalCompletions = 0
                 
-                // Определяем ожидаемое количество выполнений за неделю
-                let totalExpected: Int
-                if let targetType = habit.targetType {
-                    switch targetType {
-                    case .daily:
-                        // Цель на день: targetValue раз в день * 7 дней
-                        totalExpected = habit.targetValue * 7
-                    case .weekly:
-                        // Цель на неделю: targetValue раз за всю неделю
-                        totalExpected = habit.targetValue
+                // Определяем период, когда привычка была активна в этой неделе
+                let weekEndDate = calendar.date(byAdding: .day, value: 6, to: weekStartDate)!
+                let habitCreatedDate = calendar.startOfDay(for: habit.createdAt)
+                
+                // Начало периода: максимум из начала недели и даты создания привычки
+                let activeStartDate = max(weekStartDate, habitCreatedDate)
+                
+                // Конец периода: минимум из конца недели и даты удаления (если есть)
+                var activeEndDate = weekEndDate
+                if let deletedFromDate = habitRepository.getHabitDeletedFromDate(habitId: habit.id) {
+                    let deletedDate = calendar.startOfDay(for: deletedFromDate)
+                    if deletedDate <= weekEndDate {
+                        activeEndDate = calendar.date(byAdding: .day, value: -1, to: deletedDate) ?? weekEndDate
                     }
-                } else {
-                    // Обратная совместимость: используем dailyTarget если targetType не указан
-                    totalExpected = habit.dailyTarget > 0 ? habit.dailyTarget * 7 : 0
                 }
                 
-                // Считаем все выполнения за неделю
-                for dayOffset in 0..<7 {
-                    guard let day = calendar.date(byAdding: .day, value: dayOffset, to: weekStartDate) else { continue }
-                    let dayStart = calendar.startOfDay(for: day)
-                    let completionsForDay = dailyCompletions[dayStart] ?? 0
-                    totalCompletions += completionsForDay
-                }
+                // Считаем количество дней, когда привычка была активна
+                let activeDaysCount = max(0, calendar.dateComponents([.day], from: activeStartDate, to: activeEndDate).day ?? 0) + 1
                 
-                if habit.proportionalReward {
-                    // Пропорциональное начисление
-                    if totalCompletions > 0 && totalExpected > 0 {
-                        let ratio = Double(totalCompletions) / Double(totalExpected)
-                        let xpEarned = Int(Double(habit.xpValue * totalExpected) * ratio)
-                        totalXPChange += xpEarned
+                // Считаем только недельные цели (дневные считаются каждый день отдельно)
+                if let targetType = habit.targetType, targetType == .weekly {
+                    // Определяем ожидаемое количество выполнений за неделю
+                    let totalExpected = habit.targetValue
+                    
+                    // Считаем все выполнения за неделю (только за активные дни)
+                    for dayOffset in 0..<7 {
+                        guard let day = calendar.date(byAdding: .day, value: dayOffset, to: weekStartDate) else { continue }
+                        let dayStart = calendar.startOfDay(for: day)
+                        
+                        // Пропускаем дни, когда привычка еще не существовала или уже была удалена
+                        if dayStart < activeStartDate || dayStart > activeEndDate {
+                            continue
+                        }
+                        
+                        let completionsForDay = dailyCompletions[dayStart] ?? 0
+                        totalCompletions += completionsForDay
                     }
-                    // Если ничего не сделано, ничего не начисляем
-                } else {
-                    // Все или ничего
-                    if totalCompletions >= totalExpected && totalExpected > 0 {
-                        totalXPChange += habit.xpValue * totalExpected
-                    } else if totalExpected > 0 {
-                        // Не выполнил - штраф за невыполненное
-                        let missed = totalExpected - totalCompletions
-                        totalXPChange -= habit.xpValue * missed
+                    
+                    if totalCompletions == 0 && totalExpected > 0 {
+                        // Штраф за 0 выполнений за неделю: 2 * xpValue этой привычки
+                        totalXPChange -= habit.xpValue * 2
+                    } else if totalCompletions > 0 && totalExpected > 0 {
+                        if totalCompletions >= totalExpected {
+                            // Достигнута цель → получаю xpValue * targetValue
+                            totalXPChange += habit.xpValue * totalExpected
+                        } else {
+                            // Есть выполнения, но не достигнута цель
+                            if habit.proportionalReward {
+                                // Процентное: получаю пропорционально
+                                let ratio = Double(totalCompletions) / Double(totalExpected)
+                                let xpEarned = Int(Double(habit.xpValue * totalExpected) * ratio)
+                                totalXPChange += xpEarned
+                            }
+                            // Если "все или ничего" → ничего не получаю
+                        }
                     }
                 }
+                // Дневные цели пропускаем - они считаются каждый день отдельно
             } else {
                 // Вредная привычка
                 let dailyCompletions = habitRepository.getDailyCompletionsForWeek(habitId: habit.id, weekStartDate: weekStartDate)
-                let totalCompletions = habitRepository.getCompletionCountForWeek(habitId: habit.id, weekStartDate: weekStartDate)
+                
+                // Определяем период, когда привычка была активна в этой неделе
+                let weekEndDate = calendar.date(byAdding: .day, value: 6, to: weekStartDate)!
+                let habitCreatedDate = calendar.startOfDay(for: habit.createdAt)
+                
+                // Начало периода: максимум из начала недели и даты создания привычки
+                let activeStartDate = max(weekStartDate, habitCreatedDate)
+                
+                // Конец периода: минимум из конца недели и даты удаления (если есть)
+                var activeEndDate = weekEndDate
+                if let deletedFromDate = habitRepository.getHabitDeletedFromDate(habitId: habit.id) {
+                    let deletedDate = calendar.startOfDay(for: deletedFromDate)
+                    if deletedDate <= weekEndDate {
+                        activeEndDate = calendar.date(byAdding: .day, value: -1, to: deletedDate) ?? weekEndDate
+                    }
+                }
+                
+                // Считаем выполнения только за активные дни
+                var totalCompletions = 0
+                for dayOffset in 0..<7 {
+                    guard let day = calendar.date(byAdding: .day, value: dayOffset, to: weekStartDate) else { continue }
+                    let dayStart = calendar.startOfDay(for: day)
+                    
+                    // Пропускаем дни, когда привычка еще не существовала или уже была удалена
+                    if dayStart < activeStartDate || dayStart > activeEndDate {
+                        continue
+                    }
+                    
+                    let completionsForDay = dailyCompletions[dayStart] ?? 0
+                    totalCompletions += completionsForDay
+                }
                 
                 // Проверяем пороги
                 var shouldDeduct = true
@@ -93,6 +139,12 @@ class CalculateWeeklyLifePointsUseCase: CalculateWeeklyLifePointsUseCaseProtocol
                     for dayOffset in 0..<7 {
                         guard let day = calendar.date(byAdding: .day, value: dayOffset, to: weekStartDate) else { continue }
                         let dayStart = calendar.startOfDay(for: day)
+                        
+                        // Пропускаем дни, когда привычка еще не существовала или уже была удалена
+                        if dayStart < activeStartDate || dayStart > activeEndDate {
+                            continue
+                        }
+                        
                         let completionsForDay = dailyCompletions[dayStart] ?? 0
                         
                         if completionsForDay > 0 && completionsForDay < habit.dailyTarget {
@@ -109,6 +161,12 @@ class CalculateWeeklyLifePointsUseCase: CalculateWeeklyLifePointsUseCaseProtocol
                         for dayOffset in 0..<7 {
                             guard let day = calendar.date(byAdding: .day, value: dayOffset, to: weekStartDate) else { continue }
                             let dayStart = calendar.startOfDay(for: day)
+                            
+                            // Пропускаем дни, когда привычка еще не существовала или уже была удалена
+                            if dayStart < activeStartDate || dayStart > activeEndDate {
+                                continue
+                            }
+                            
                             let completionsForDay = dailyCompletions[dayStart] ?? 0
                             
                             if completionsForDay >= habit.dailyTarget {

@@ -25,6 +25,7 @@ protocol HabitRepositoryProtocol {
     func getCompletionCountForDate(_ habitId: UUID, date: Date) -> Int
     func getCompletionDatesForWeek(habitId: UUID, weekStartDate: Date) -> [Date] // Возвращает даты выполнения за неделю
     func markHabitAsDeletedFromDate(_ habitId: UUID, fromDate: Date) throws // Помечает привычку как удаленную с определенной даты
+    func getHabitDeletedFromDate(habitId: UUID) -> Date? // Возвращает дату удаления привычки (если есть)
 }
 
 class HabitRepository: HabitRepositoryProtocol {
@@ -443,6 +444,21 @@ class HabitRepository: HabitRepositoryProtocol {
         }
         
         try context.save()
+    }
+    
+    func getHabitDeletedFromDate(habitId: UUID) -> Date? {
+        let request: NSFetchRequest<Habit> = Habit.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", habitId as CVarArg)
+        
+        do {
+            if let habit = try context.fetch(request).first {
+                return habit.deletedFromDate
+            }
+            return nil
+        } catch {
+            print("Error fetching habit deleted date: \(error)")
+            return nil
+        }
     }
 }
 

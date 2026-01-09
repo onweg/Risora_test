@@ -32,9 +32,14 @@ class DependencyContainer {
         )
     }()
     
+    lazy var calculateDailyLifePointsUseCase: CalculateDailyLifePointsUseCaseProtocol = {
+        CalculateDailyLifePointsUseCase(habitRepository: habitRepository)
+    }()
+    
     lazy var processWeekEndUseCase: ProcessWeekEndUseCaseProtocol = {
         ProcessWeekEndUseCase(
             calculateWeeklyLifePointsUseCase: calculateWeeklyLifePointsUseCase,
+            calculateDailyLifePointsUseCase: calculateDailyLifePointsUseCase,
             gameStateRepository: gameStateRepository,
             lifePointRepository: lifePointRepository
         )
