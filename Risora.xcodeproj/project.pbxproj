@@ -27,6 +27,7 @@
 		2CB7D6922F1140D200A7185E /* Risora.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Risora.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2CB7D6A72F1140D400A7185E /* RisoraTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RisoraTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2CB7D6B12F1140D400A7185E /* RisoraUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RisoraUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2CE2501D2F11A30600821C7F /* Risora-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Risora-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +76,7 @@
 		2CB7D6892F1140D200A7185E = {
 			isa = PBXGroup;
 			children = (
+				2CE2501D2F11A30600821C7F /* Risora-Info.plist */,
 				2CB7D6942F1140D200A7185E /* test2 */,
 				2CB7D6AA2F1140D400A7185E /* test2Tests */,
 				2CB7D6B42F1140D400A7185E /* test2UITests */,
@@ -399,6 +401,7 @@
 				DEVELOPMENT_TEAM = SMPKNPT46X;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Risora-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -428,6 +431,7 @@
 				DEVELOPMENT_TEAM = SMPKNPT46X;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Risora-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

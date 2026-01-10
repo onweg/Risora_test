@@ -127,6 +127,20 @@ class HabitsListViewModel: ObservableObject {
         }
     }
     
+    func moveHabit(from source: IndexSet, to destination: Int) {
+        var updatedHabits = habits
+        updatedHabits.move(fromOffsets: source, toOffset: destination)
+        
+        // Обновляем порядок в репозитории
+        let habitIds = updatedHabits.map { $0.habit.id }
+        do {
+            try habitRepository.updateHabitOrder(habitIds: habitIds)
+            updateHabits()
+        } catch {
+            print("Error updating habit order: \(error)")
+        }
+    }
+    
     func checkAndProcessWeekEnd() {
         do {
             try processAllMissedWeeksUseCase.execute()

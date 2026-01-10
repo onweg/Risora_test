@@ -26,6 +26,7 @@ protocol HabitRepositoryProtocol {
     func getCompletionDatesForWeek(habitId: UUID, weekStartDate: Date) -> [Date] // Возвращает даты выполнения за неделю
     func markHabitAsDeletedFromDate(_ habitId: UUID, fromDate: Date) throws // Помечает привычку как удаленную с определенной даты
     func getHabitDeletedFromDate(habitId: UUID) -> Date? // Возвращает дату удаления привычки (если есть)
+    func updateHabitOrder(habitIds: [UUID]) throws // Обновляет порядок привычек
 }
 
 class HabitRepository: HabitRepositoryProtocol {
@@ -37,7 +38,10 @@ class HabitRepository: HabitRepositoryProtocol {
     
     func getAllHabits() -> [HabitModel] {
         let request: NSFetchRequest<Habit> = Habit.fetchRequest()
-        request.sortDescriptors = [NSSortDescriptor(keyPath: \Habit.createdAt, ascending: true)]
+        request.sortDescriptors = [
+            NSSortDescriptor(keyPath: \Habit.sortOrder, ascending: true),
+            NSSortDescriptor(keyPath: \Habit.createdAt, ascending: true)
+        ]
         
         do {
             let habits = try context.fetch(request)
@@ -64,7 +68,8 @@ class HabitRepository: HabitRepositoryProtocol {
                     targetValue: Int(habit.targetValue),
                     dailyTarget: Int(habit.dailyTarget),
                     weeklyTarget: Int(habit.weeklyTarget),
-                    proportionalReward: habit.proportionalReward
+                    proportionalReward: habit.proportionalReward,
+                    sortOrder: Int(habit.sortOrder)
                 )
             }
         } catch {
@@ -75,7 +80,10 @@ class HabitRepository: HabitRepositoryProtocol {
     
     func getAllHabitsIncludingDeleted(forDate: Date) -> [HabitModel] {
         let request: NSFetchRequest<Habit> = Habit.fetchRequest()
-        request.sortDescriptors = [NSSortDescriptor(keyPath: \Habit.createdAt, ascending: true)]
+        request.sortDescriptors = [
+            NSSortDescriptor(keyPath: \Habit.sortOrder, ascending: true),
+            NSSortDescriptor(keyPath: \Habit.createdAt, ascending: true)
+        ]
         
         do {
             let habits = try context.fetch(request)
@@ -102,7 +110,8 @@ class HabitRepository: HabitRepositoryProtocol {
                     targetValue: Int(habit.targetValue),
                     dailyTarget: Int(habit.dailyTarget),
                     weeklyTarget: Int(habit.weeklyTarget),
-                    proportionalReward: habit.proportionalReward
+                    proportionalReward: habit.proportionalReward,
+                    sortOrder: Int(habit.sortOrder)
                 )
             }
         } catch {
@@ -112,6 +121,16 @@ class HabitRepository: HabitRepositoryProtocol {
     }
     
     func createHabit(_ habit: HabitModel) throws {
+        // Определяем максимальный sortOrder для новой привычки
+        let request: NSFetchRequest<Habit> = Habit.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Habit.sortOrder, ascending: false)]
+        request.fetchLimit = 1
+        
+        var maxSortOrder = 0
+        if let lastHabit = try? context.fetch(request).first {
+            maxSortOrder = Int(lastHabit.sortOrder)
+        }
+        
         let habitEntity = Habit(context: context)
         habitEntity.id = habit.id
         habitEntity.name = habit.name
@@ -124,6 +143,7 @@ class HabitRepository: HabitRepositoryProtocol {
         habitEntity.dailyTarget = Int16(habit.dailyTarget)
         habitEntity.weeklyTarget = Int16(habit.weeklyTarget)
         habitEntity.proportionalReward = habit.proportionalReward
+        habitEntity.sortOrder = Int32(maxSortOrder + 1)
         
         try context.save()
         
@@ -459,6 +479,20 @@ class HabitRepository: HabitRepositoryProtocol {
             print("Error fetching habit deleted date: \(error)")
             return nil
         }
+    }
+    
+    func updateHabitOrder(habitIds: [UUID]) throws {
+        // Обновляем sortOrder для всех привычек согласно новому порядку
+        for (index, habitId) in habitIds.enumerated() {
+            let request: NSFetchRequest<Habit> = Habit.fetchRequest()
+            request.predicate = NSPredicate(format: "id == %@", habitId as CVarArg)
+            
+            if let habit = try context.fetch(request).first {
+                habit.sortOrder = Int32(index)
+            }
+        }
+        
+        try context.save()
     }
 }
 

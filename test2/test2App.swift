@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import UserNotifications
 
 @main
 struct test2App: App {
@@ -23,6 +24,9 @@ struct test2App: App {
         } catch {
             print("Error initializing game state: \(error)")
         }
+        
+        // Настраиваем уведомления
+        NotificationService.shared.requestAuthorization()
         
         // Настраиваем автоматическое сохранение при переходе в фон
         let controller = persistenceController
@@ -65,6 +69,11 @@ struct test2App: App {
         WindowGroup {
             MainView(container: dependencyContainer)
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .onAppear {
+                    // Обновляем содержимое уведомления при каждом запуске приложения
+                    // чтобы каждый раз была новая случайная фраза
+                    NotificationService.shared.updateNotificationContent()
+                }
         }
     }
 }

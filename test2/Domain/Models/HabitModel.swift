@@ -20,6 +20,7 @@ struct HabitModel: Identifiable {
     let dailyTarget: Int // Для полезных: сколько раз в день (если targetType = daily). Для вредных: минимальный порог за день (0 = без лимита)
     let weeklyTarget: Int // Для полезных: сколько раз в неделю (если targetType = weekly). Для вредных: минимальный порог за неделю (0 = без лимита)
     let proportionalReward: Bool // Для полезных: пропорциональное начисление XP или все или ничего
+    let sortOrder: Int // Порядок сортировки в списке
     
     init(
         id: UUID = UUID(),
@@ -33,7 +34,8 @@ struct HabitModel: Identifiable {
         targetValue: Int = 0,
         dailyTarget: Int = 0,
         weeklyTarget: Int = 0,
-        proportionalReward: Bool = false
+        proportionalReward: Bool = false,
+        sortOrder: Int = 0
     ) {
         self.id = id
         self.name = name
@@ -47,6 +49,7 @@ struct HabitModel: Identifiable {
         self.dailyTarget = dailyTarget
         self.weeklyTarget = weeklyTarget
         self.proportionalReward = proportionalReward
+        self.sortOrder = sortOrder
     }
 }
 

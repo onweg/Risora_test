@@ -82,6 +82,7 @@ struct HabitsListView: View {
                                 }
                             }
                         }
+                        .onMove(perform: viewModel.moveHabit)
                     }
                     .listStyle(PlainListStyle())
                 }
@@ -282,6 +283,14 @@ struct HabitRowView: View {
                     Text("XP: \(habit.xpValue)")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                    
+                    // Индикатор типа начисления XP (только для процентного)
+                    if habit.type == .good && habit.proportionalReward {
+                        Image(systemName: "percent")
+                            .font(.caption2)
+                            .foregroundColor(.blue)
+                            .help("Процентное начисление")
+                    }
                 }
                 
                 // Показываем дни выполнения для недельных задач
