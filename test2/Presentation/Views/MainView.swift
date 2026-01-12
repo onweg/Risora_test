@@ -10,6 +10,7 @@ import SwiftUI
 struct MainView: View {
     @StateObject private var habitsListViewModel: HabitsListViewModel
     @StateObject private var chartViewModel: LifePointsChartViewModel
+    @StateObject private var goalsViewModel: GoalsViewModel
     
     private let checkGameOverUseCase: CheckGameOverUseCaseProtocol
     private let resetGameUseCase: ResetGameUseCaseProtocol
@@ -19,6 +20,7 @@ struct MainView: View {
     init(container: DependencyContainer) {
         _habitsListViewModel = StateObject(wrappedValue: container.makeHabitsListViewModel())
         _chartViewModel = StateObject(wrappedValue: container.makeLifePointsChartViewModel())
+        _goalsViewModel = StateObject(wrappedValue: container.makeGoalsViewModel())
         self.checkGameOverUseCase = container.checkGameOverUseCase
         self.resetGameUseCase = container.resetGameUseCase
     }
@@ -42,6 +44,12 @@ struct MainView: View {
                             Label("График", systemImage: "chart.line.uptrend.xyaxis")
                         }
                         .tag(1)
+                    
+                    GoalsView(viewModel: goalsViewModel)
+                        .tabItem {
+                            Label("Цели", systemImage: "target")
+                        }
+                        .tag(2)
                 }
             }
         }

@@ -7,6 +7,7 @@
 
 import Foundation
 import UserNotifications
+import UIKit
 
 class NotificationService {
     static let shared = NotificationService()
@@ -60,7 +61,8 @@ class NotificationService {
         content.title = "Проверь привычки!"
         content.body = getRandomPhrase()
         content.sound = .default
-        content.badge = 1
+        // Не устанавливаем badge, чтобы не создавать красный кружок на иконке
+        // Если нужен badge, его лучше очищать при открытии приложения
         
         // Устанавливаем время: 23:50 каждый день
         var dateComponents = DateComponents()
@@ -100,7 +102,8 @@ class NotificationService {
                 content.title = "Проверь привычки!"
                 content.body = self.getRandomPhrase()
                 content.sound = .default
-                content.badge = 1
+                // Не устанавливаем badge, чтобы не создавать красный кружок на иконке
+                // Если нужен badge, его лучше очищать при открытии приложения
                 
                 let request = UNNotificationRequest(
                     identifier: "daily-habit-reminder",
@@ -129,6 +132,15 @@ class NotificationService {
     func checkNotificationStatus(completion: @escaping (Bool) -> Void) {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             completion(settings.authorizationStatus == .authorized)
+        }
+    }
+    
+    func clearBadge() {
+        // Очищаем badge на иконке приложения
+        // Используем главный поток для обновления UI
+        DispatchQueue.main.async {
+            UIApplication.shared.applicationIconBadgeNumber = 0
+            print("Badge cleared successfully")
         }
     }
 }

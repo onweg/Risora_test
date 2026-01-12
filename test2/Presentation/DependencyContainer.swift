@@ -24,6 +24,10 @@ class DependencyContainer {
         GameStateRepository(context: context)
     }()
     
+    lazy var goalRepository: GoalRepositoryProtocol = {
+        GoalRepository(context: context)
+    }()
+    
     // UseCases
     lazy var calculateWeeklyLifePointsUseCase: CalculateWeeklyLifePointsUseCaseProtocol = {
         CalculateWeeklyLifePointsUseCase(
@@ -71,7 +75,7 @@ class DependencyContainer {
     }()
     
     lazy var deleteHabitCompletionsUseCase: DeleteHabitCompletionsUseCaseProtocol = {
-        DeleteHabitCompletionsUseCase(habitRepository: habitRepository)
+        DeleteHabitCompletionsUseCase(habitRepository: habitRepository, goalRepository: goalRepository)
     }()
     
     lazy var checkGameOverUseCase: CheckGameOverUseCaseProtocol = {
@@ -112,6 +116,13 @@ class DependencyContainer {
     
     func makeAddHabitViewModel() -> AddHabitViewModel {
         AddHabitViewModel(habitRepository: habitRepository)
+    }
+    
+    func makeGoalsViewModel() -> GoalsViewModel {
+        GoalsViewModel(
+            goalRepository: goalRepository,
+            habitRepository: habitRepository
+        )
     }
     
     init(context: NSManagedObjectContext) {

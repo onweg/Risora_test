@@ -63,6 +63,18 @@ struct test2App: App {
                 }
             }
         }
+        
+        // Очищаем badge когда приложение возвращается на передний план
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.willEnterForegroundNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            NotificationService.shared.clearBadge()
+        }
+        
+        // Очищаем badge при первом запуске
+        NotificationService.shared.clearBadge()
     }
 
     var body: some Scene {
@@ -70,6 +82,9 @@ struct test2App: App {
             MainView(container: dependencyContainer)
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
                 .onAppear {
+                    // Очищаем badge при открытии приложения (дополнительная проверка)
+                    NotificationService.shared.clearBadge()
+                    
                     // Обновляем содержимое уведомления при каждом запуске приложения
                     // чтобы каждый раз была новая случайная фраза
                     NotificationService.shared.updateNotificationContent()
