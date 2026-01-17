@@ -67,9 +67,12 @@ class CalculateDailyLifePointsUseCase: CalculateDailyLifePointsUseCaseProtocol {
             } else {
                 // Вредные привычки - считаем выполнения
                 let completionsForDay = habitRepository.getCompletionCountForDate(habit.id, date: date)
-                if completionsForDay > 0 {
-                    // Штраф за вредные привычки (логика остается прежней)
-                    totalXPChange -= habit.xpValue * completionsForDay
+                let threshold = habit.dailyTarget // Порог допустимых ошибок в день
+                
+                if completionsForDay > threshold {
+                    // Штрафуем только за превышение порога
+                    let excess = completionsForDay - threshold
+                    totalXPChange -= habit.xpValue * excess
                 }
             }
         }

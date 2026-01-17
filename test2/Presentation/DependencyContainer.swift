@@ -86,6 +86,13 @@ class DependencyContainer {
         ResetGameUseCase(gameStateRepository: gameStateRepository)
     }()
     
+    lazy var getWeeklyHabitAnalysisUseCase: GetWeeklyHabitAnalysisUseCaseProtocol = {
+        GetWeeklyHabitAnalysisUseCase(
+            habitRepository: habitRepository,
+            lifePointRepository: lifePointRepository
+        )
+    }()
+    
     lazy var processAllMissedWeeksUseCase: ProcessAllMissedWeeksUseCaseProtocol = {
         ProcessAllMissedWeeksUseCase(
             processWeekEndUseCase: processWeekEndUseCase,
@@ -110,7 +117,11 @@ class DependencyContainer {
     func makeLifePointsChartViewModel() -> LifePointsChartViewModel {
         LifePointsChartViewModel(
             lifePointRepository: lifePointRepository,
-            gameStateRepository: gameStateRepository
+            gameStateRepository: gameStateRepository,
+            habitRepository: habitRepository,
+            goalRepository: goalRepository,
+            getWeeklyHabitAnalysisUseCase: getWeeklyHabitAnalysisUseCase,
+            processWeekEndUseCase: processWeekEndUseCase
         )
     }
     

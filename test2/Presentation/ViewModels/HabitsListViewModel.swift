@@ -153,5 +153,30 @@ class HabitsListViewModel: ObservableObject {
     func refresh() {
         loadData()
     }
+    
+    func debugPrintHabits() {
+        let allHabits = habitRepository.getAllHabits()
+        print("\n--- 📝 ВСЕ ПРИВЫЧКИ В БАЗЕ ---")
+        if allHabits.isEmpty {
+            print("База пуста")
+        }
+        for habit in allHabits {
+            let deletedDate = habitRepository.getHabitDeletedFromDate(habitId: habit.id)
+            let status = deletedDate != nil ? "❌ УДАЛЕНА с \(deletedDate!)" : "✅ АКТИВНА"
+            print("""
+            ID: \(habit.id)
+            Название: [\(habit.name)]
+            Тип: \(habit.type.displayName)
+            Статус: \(status)
+            XP: \(habit.xpValue)
+            Цель: \(habit.targetValue)
+            Лимит ДЕНЬ: \(habit.dailyTarget)
+            Лимит НЕДЕЛЯ: \(habit.weeklyTarget)
+            Создана: \(habit.createdAt)
+            ----------------------------
+            """)
+        }
+        print("--- КОНЕЦ СПИСКА ---\n")
+    }
 }
 

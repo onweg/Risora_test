@@ -27,6 +27,8 @@ protocol HabitRepositoryProtocol {
     func markHabitAsDeletedFromDate(_ habitId: UUID, fromDate: Date) throws // Помечает привычку как удаленную с определенной даты
     func getHabitDeletedFromDate(habitId: UUID) -> Date? // Возвращает дату удаления привычки (если есть)
     func updateHabitOrder(habitIds: [UUID]) throws // Обновляет порядок привычек
+    func getAllHabitsRaw() -> [HabitModel] // Возвращает ВООБЩЕ ВСЕ привычки из базы
+    func hardDeleteHabit(_ habitId: UUID) throws // Удаляет запись навсегда из базы
 }
 
 class HabitRepository: HabitRepositoryProtocol {
@@ -493,6 +495,42 @@ class HabitRepository: HabitRepositoryProtocol {
         }
         
         try context.save()
+    }
+    
+    func getAllHabitsRaw() -> [HabitModel] {
+        let request: NSFetchRequest<Habit> = Habit.fetchRequest()
+        do {
+            let habits = try context.fetch(request)
+            return habits.map { habit in
+                HabitModel(
+                    id: habit.id ?? UUID(),
+                    name: habit.name ?? "Без названия",
+                    type: HabitType(rawValue: habit.type ?? "good") ?? .good,
+                    xpValue: Int(habit.xpValue),
+                    createdAt: habit.createdAt ?? Date(),
+                    targetType: habit.targetType != nil ? HabitTargetType(rawValue: habit.targetType!) : nil,
+                    targetValue: Int(habit.targetValue),
+                    dailyTarget: Int(habit.dailyTarget),
+                    weeklyTarget: Int(habit.weeklyTarget),
+                    proportionalReward: habit.proportionalReward,
+                    sortOrder: Int(habit.sortOrder)
+                )
+            }
+        } catch {
+            print("Error fetching raw habits: \(error)")
+            return []
+        }
+    }
+    
+    func hardDeleteHabit(_ habitId: UUID) throws {
+        let request: NSFetchRequest<Habit> = Habit.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", habitId as CVarArg)
+        
+        if let habit = try context.fetch(request).first {
+            context.delete(habit)
+            try context.save()
+            print("Habit \(habitId) hard deleted")
+        }
     }
 }
 
