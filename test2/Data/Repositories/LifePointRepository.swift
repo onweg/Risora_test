@@ -12,18 +12,30 @@ protocol LifePointRepositoryProtocol {
     func getAllLifePoints() -> [LifePointModel]
     func saveLifePoint(_ lifePoint: LifePointModel) throws
     func getLifePointForWeek(weekStartDate: Date) -> LifePointModel?
+    func setGameAttemptRepository(_ repository: GameAttemptRepositoryProtocol)
+    func getLifePointsForAttempt(_ attemptId: UUID) -> [LifePointModel]
 }
 
 class LifePointRepository: LifePointRepositoryProtocol {
     private let context: NSManagedObjectContext
+    private var gameAttemptRepository: GameAttemptRepositoryProtocol?
     
     init(context: NSManagedObjectContext) {
         self.context = context
     }
     
+    func setGameAttemptRepository(_ repository: GameAttemptRepositoryProtocol) {
+        self.gameAttemptRepository = repository
+    }
+    
     func getAllLifePoints() -> [LifePointModel] {
         let request: NSFetchRequest<LifePoint> = LifePoint.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(keyPath: \LifePoint.date, ascending: true)]
+        
+        // Фильтруем по активной попытке
+        if let activeAttempt = gameAttemptRepository?.getActiveAttempt() {
+            request.predicate = NSPredicate(format: "gameAttempt.id == %@", activeAttempt.id as CVarArg)
+        }
         
         do {
             let lifePoints = try context.fetch(request)
@@ -45,6 +57,31 @@ class LifePointRepository: LifePointRepositoryProtocol {
         }
     }
     
+    func getLifePointsForAttempt(_ attemptId: UUID) -> [LifePointModel] {
+        let request: NSFetchRequest<LifePoint> = LifePoint.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \LifePoint.date, ascending: true)]
+        request.predicate = NSPredicate(format: "gameAttempt.id == %@", attemptId as CVarArg)
+        
+        do {
+            let lifePoints = try context.fetch(request)
+            return lifePoints.compactMap { lp in
+                guard let id = lp.id,
+                      let date = lp.date,
+                      let weekStartDate = lp.weekStartDate else { return nil }
+                
+                return LifePointModel(
+                    id: id,
+                    date: date,
+                    value: Int(lp.value),
+                    weekStartDate: weekStartDate
+                )
+            }
+        } catch {
+            print("Error fetching life points for attempt: \(error)")
+            return []
+        }
+    }
+    
     func saveLifePoint(_ lifePoint: LifePointModel) throws {
         // Проверяем, существует ли уже запись для этой недели
         if let existing = getLifePointForWeek(weekStartDate: lifePoint.weekStartDate) {
@@ -61,6 +98,15 @@ class LifePointRepository: LifePointRepositoryProtocol {
             lifePointEntity.date = lifePoint.date
             lifePointEntity.value = Int16(lifePoint.value)
             lifePointEntity.weekStartDate = lifePoint.weekStartDate
+            
+            // Связываем с активной попыткой
+            if let activeAttempt = gameAttemptRepository?.getActiveAttempt() {
+                let request: NSFetchRequest<GameAttempt> = GameAttempt.fetchRequest()
+                request.predicate = NSPredicate(format: "id == %@", activeAttempt.id as CVarArg)
+                if let attemptEntity = try? context.fetch(request).first {
+                    lifePointEntity.gameAttempt = attemptEntity
+                }
+            }
         }
         
         try context.save()
@@ -68,7 +114,17 @@ class LifePointRepository: LifePointRepositoryProtocol {
     
     func getLifePointForWeek(weekStartDate: Date) -> LifePointModel? {
         let request: NSFetchRequest<LifePoint> = LifePoint.fetchRequest()
-        request.predicate = NSPredicate(format: "weekStartDate == %@", weekStartDate as NSDate)
+        
+        // Фильтруем по активной попытке
+        if let activeAttempt = gameAttemptRepository?.getActiveAttempt() {
+            request.predicate = NSPredicate(
+                format: "weekStartDate == %@ AND gameAttempt.id == %@",
+                weekStartDate as NSDate,
+                activeAttempt.id as CVarArg
+            )
+        } else {
+            request.predicate = NSPredicate(format: "weekStartDate == %@", weekStartDate as NSDate)
+        }
         
         do {
             if let lp = try context.fetch(request).first,

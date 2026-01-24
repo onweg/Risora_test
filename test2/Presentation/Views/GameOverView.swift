@@ -10,11 +10,9 @@ import Charts
 
 struct GameOverView: View {
     @StateObject private var chartViewModel: LifePointsChartViewModel
-    let onReset: () -> Void
     
-    init(chartViewModel: LifePointsChartViewModel, onReset: @escaping () -> Void) {
+    init(chartViewModel: LifePointsChartViewModel) {
         _chartViewModel = StateObject(wrappedValue: chartViewModel)
-        self.onReset = onReset
     }
     
     var body: some View {
@@ -77,20 +75,6 @@ struct GameOverView: View {
                     }
                     .background(Color(.systemGray6))
                     .cornerRadius(12)
-                    .padding(.horizontal)
-                    
-                    // Кнопка начать заново
-                    Button(action: {
-                        onReset()
-                    }) {
-                        Text("Начать заново")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .cornerRadius(12)
-                    }
                     .padding(.horizontal)
                     .padding(.bottom, 40)
                 }

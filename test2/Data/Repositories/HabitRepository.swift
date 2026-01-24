@@ -29,13 +29,19 @@ protocol HabitRepositoryProtocol {
     func updateHabitOrder(habitIds: [UUID]) throws // Обновляет порядок привычек
     func getAllHabitsRaw() -> [HabitModel] // Возвращает ВООБЩЕ ВСЕ привычки из базы
     func hardDeleteHabit(_ habitId: UUID) throws // Удаляет запись навсегда из базы
+    func setGameAttemptRepository(_ repository: GameAttemptRepositoryProtocol) // Устанавливает репозиторий попыток
 }
 
 class HabitRepository: HabitRepositoryProtocol {
     private let context: NSManagedObjectContext
+    private var gameAttemptRepository: GameAttemptRepositoryProtocol?
     
     init(context: NSManagedObjectContext) {
         self.context = context
+    }
+    
+    func setGameAttemptRepository(_ repository: GameAttemptRepositoryProtocol) {
+        self.gameAttemptRepository = repository
     }
     
     func getAllHabits() -> [HabitModel] {
@@ -170,7 +176,18 @@ class HabitRepository: HabitRepositoryProtocol {
         }
         
         let request: NSFetchRequest<HabitCompletion> = HabitCompletion.fetchRequest()
-        request.predicate = NSPredicate(format: "date >= %@ AND date <= %@", weekStartDate as NSDate, weekEndDate as NSDate)
+        
+        // Фильтруем по активной попытке
+        if let activeAttempt = gameAttemptRepository?.getActiveAttempt() {
+            request.predicate = NSPredicate(
+                format: "date >= %@ AND date <= %@ AND gameAttempt.id == %@",
+                weekStartDate as NSDate,
+                weekEndDate as NSDate,
+                activeAttempt.id as CVarArg
+            )
+        } else {
+            request.predicate = NSPredicate(format: "date >= %@ AND date <= %@", weekStartDate as NSDate, weekEndDate as NSDate)
+        }
         
         do {
             let completions = try context.fetch(request)
@@ -200,12 +217,24 @@ class HabitRepository: HabitRepositoryProtocol {
         }
         
         let request: NSFetchRequest<HabitCompletion> = HabitCompletion.fetchRequest()
-        request.predicate = NSPredicate(
-            format: "habit.id == %@ AND date >= %@ AND date <= %@",
-            habitId as CVarArg,
-            weekStartDate as NSDate,
-            weekEndDate as NSDate
-        )
+        
+        // Фильтруем по активной попытке
+        if let activeAttempt = gameAttemptRepository?.getActiveAttempt() {
+            request.predicate = NSPredicate(
+                format: "habit.id == %@ AND date >= %@ AND date <= %@ AND gameAttempt.id == %@",
+                habitId as CVarArg,
+                weekStartDate as NSDate,
+                weekEndDate as NSDate,
+                activeAttempt.id as CVarArg
+            )
+        } else {
+            request.predicate = NSPredicate(
+                format: "habit.id == %@ AND date >= %@ AND date <= %@",
+                habitId as CVarArg,
+                weekStartDate as NSDate,
+                weekEndDate as NSDate
+            )
+        }
         
         do {
             let completions = try context.fetch(request)
@@ -223,12 +252,24 @@ class HabitRepository: HabitRepositoryProtocol {
         }
         
         let request: NSFetchRequest<HabitCompletion> = HabitCompletion.fetchRequest()
-        request.predicate = NSPredicate(
-            format: "habit.id == %@ AND date >= %@ AND date <= %@",
-            habitId as CVarArg,
-            weekStartDate as NSDate,
-            weekEndDate as NSDate
-        )
+        
+        // Фильтруем по активной попытке
+        if let activeAttempt = gameAttemptRepository?.getActiveAttempt() {
+            request.predicate = NSPredicate(
+                format: "habit.id == %@ AND date >= %@ AND date <= %@ AND gameAttempt.id == %@",
+                habitId as CVarArg,
+                weekStartDate as NSDate,
+                weekEndDate as NSDate,
+                activeAttempt.id as CVarArg
+            )
+        } else {
+            request.predicate = NSPredicate(
+                format: "habit.id == %@ AND date >= %@ AND date <= %@",
+                habitId as CVarArg,
+                weekStartDate as NSDate,
+                weekEndDate as NSDate
+            )
+        }
         
         do {
             let completions = try context.fetch(request)
@@ -253,7 +294,18 @@ class HabitRepository: HabitRepositoryProtocol {
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
         
         let request: NSFetchRequest<HabitCompletion> = HabitCompletion.fetchRequest()
-        request.predicate = NSPredicate(format: "date >= %@ AND date < %@", startOfDay as NSDate, endOfDay as NSDate)
+        
+        // Фильтруем по активной попытке
+        if let activeAttempt = gameAttemptRepository?.getActiveAttempt() {
+            request.predicate = NSPredicate(
+                format: "date >= %@ AND date < %@ AND gameAttempt.id == %@",
+                startOfDay as NSDate,
+                endOfDay as NSDate,
+                activeAttempt.id as CVarArg
+            )
+        } else {
+            request.predicate = NSPredicate(format: "date >= %@ AND date < %@", startOfDay as NSDate, endOfDay as NSDate)
+        }
         
         do {
             let completions = try context.fetch(request)
@@ -320,6 +372,15 @@ class HabitRepository: HabitRepositoryProtocol {
         completion.weekStartDate = weekStartDate
         completion.habit = habit
         
+        // Связываем с активной попыткой
+        if let activeAttempt = gameAttemptRepository?.getActiveAttempt() {
+            let request: NSFetchRequest<GameAttempt> = GameAttempt.fetchRequest()
+            request.predicate = NSPredicate(format: "id == %@", activeAttempt.id as CVarArg)
+            if let attemptEntity = try? context.fetch(request).first {
+                completion.gameAttempt = attemptEntity
+            }
+        }
+        
         try context.save()
     }
     
@@ -329,12 +390,24 @@ class HabitRepository: HabitRepositoryProtocol {
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
         
         let request: NSFetchRequest<HabitCompletion> = HabitCompletion.fetchRequest()
-        request.predicate = NSPredicate(
-            format: "habit.id == %@ AND date >= %@ AND date < %@",
-            habitId as CVarArg,
-            startOfDay as NSDate,
-            endOfDay as NSDate
-        )
+        
+        // Фильтруем по активной попытке
+        if let activeAttempt = gameAttemptRepository?.getActiveAttempt() {
+            request.predicate = NSPredicate(
+                format: "habit.id == %@ AND date >= %@ AND date < %@ AND gameAttempt.id == %@",
+                habitId as CVarArg,
+                startOfDay as NSDate,
+                endOfDay as NSDate,
+                activeAttempt.id as CVarArg
+            )
+        } else {
+            request.predicate = NSPredicate(
+                format: "habit.id == %@ AND date >= %@ AND date < %@",
+                habitId as CVarArg,
+                startOfDay as NSDate,
+                endOfDay as NSDate
+            )
+        }
         
         let completions = try context.fetch(request)
         for completion in completions {
@@ -355,12 +428,24 @@ class HabitRepository: HabitRepositoryProtocol {
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
         
         let request: NSFetchRequest<HabitCompletion> = HabitCompletion.fetchRequest()
-        request.predicate = NSPredicate(
-            format: "habit.id == %@ AND date >= %@ AND date < %@",
-            habitId as CVarArg,
-            startOfDay as NSDate,
-            endOfDay as NSDate
-        )
+        
+        // Фильтруем по активной попытке
+        if let activeAttempt = gameAttemptRepository?.getActiveAttempt() {
+            request.predicate = NSPredicate(
+                format: "habit.id == %@ AND date >= %@ AND date < %@ AND gameAttempt.id == %@",
+                habitId as CVarArg,
+                startOfDay as NSDate,
+                endOfDay as NSDate,
+                activeAttempt.id as CVarArg
+            )
+        } else {
+            request.predicate = NSPredicate(
+                format: "habit.id == %@ AND date >= %@ AND date < %@",
+                habitId as CVarArg,
+                startOfDay as NSDate,
+                endOfDay as NSDate
+            )
+        }
         
         do {
             let completions = try context.fetch(request)
@@ -377,12 +462,25 @@ class HabitRepository: HabitRepositoryProtocol {
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
         
         let request: NSFetchRequest<HabitCompletion> = HabitCompletion.fetchRequest()
-        request.predicate = NSPredicate(
-            format: "habit.id == %@ AND date >= %@ AND date < %@",
-            habitId as CVarArg,
-            startOfDay as NSDate,
-            endOfDay as NSDate
-        )
+        
+        // Фильтруем по активной попытке
+        if let activeAttempt = gameAttemptRepository?.getActiveAttempt() {
+            request.predicate = NSPredicate(
+                format: "habit.id == %@ AND date >= %@ AND date < %@ AND gameAttempt.id == %@",
+                habitId as CVarArg,
+                startOfDay as NSDate,
+                endOfDay as NSDate,
+                activeAttempt.id as CVarArg
+            )
+        } else {
+            request.predicate = NSPredicate(
+                format: "habit.id == %@ AND date >= %@ AND date < %@",
+                habitId as CVarArg,
+                startOfDay as NSDate,
+                endOfDay as NSDate
+            )
+        }
+        
         request.sortDescriptors = [NSSortDescriptor(keyPath: \HabitCompletion.date, ascending: false)]
         request.fetchLimit = 1
         
@@ -400,12 +498,25 @@ class HabitRepository: HabitRepositoryProtocol {
         }
         
         let request: NSFetchRequest<HabitCompletion> = HabitCompletion.fetchRequest()
-        request.predicate = NSPredicate(
-            format: "habit.id == %@ AND date >= %@ AND date <= %@",
-            habitId as CVarArg,
-            weekStartDate as NSDate,
-            weekEndDate as NSDate
-        )
+        
+        // Фильтруем по активной попытке
+        if let activeAttempt = gameAttemptRepository?.getActiveAttempt() {
+            request.predicate = NSPredicate(
+                format: "habit.id == %@ AND date >= %@ AND date <= %@ AND gameAttempt.id == %@",
+                habitId as CVarArg,
+                weekStartDate as NSDate,
+                weekEndDate as NSDate,
+                activeAttempt.id as CVarArg
+            )
+        } else {
+            request.predicate = NSPredicate(
+                format: "habit.id == %@ AND date >= %@ AND date <= %@",
+                habitId as CVarArg,
+                weekStartDate as NSDate,
+                weekEndDate as NSDate
+            )
+        }
+        
         request.sortDescriptors = [NSSortDescriptor(keyPath: \HabitCompletion.date, ascending: false)]
         request.fetchLimit = 1
         
@@ -423,12 +534,25 @@ class HabitRepository: HabitRepositoryProtocol {
         }
         
         let request: NSFetchRequest<HabitCompletion> = HabitCompletion.fetchRequest()
-        request.predicate = NSPredicate(
-            format: "habit.id == %@ AND date >= %@ AND date <= %@",
-            habitId as CVarArg,
-            weekStartDate as NSDate,
-            weekEndDate as NSDate
-        )
+        
+        // Фильтруем по активной попытке
+        if let activeAttempt = gameAttemptRepository?.getActiveAttempt() {
+            request.predicate = NSPredicate(
+                format: "habit.id == %@ AND date >= %@ AND date <= %@ AND gameAttempt.id == %@",
+                habitId as CVarArg,
+                weekStartDate as NSDate,
+                weekEndDate as NSDate,
+                activeAttempt.id as CVarArg
+            )
+        } else {
+            request.predicate = NSPredicate(
+                format: "habit.id == %@ AND date >= %@ AND date <= %@",
+                habitId as CVarArg,
+                weekStartDate as NSDate,
+                weekEndDate as NSDate
+            )
+        }
+        
         request.sortDescriptors = [NSSortDescriptor(keyPath: \HabitCompletion.date, ascending: true)]
         
         do {

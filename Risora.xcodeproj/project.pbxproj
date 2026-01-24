@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2CE251212F252D8200821C7F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2CE251202F252D8200821C7F /* WidgetKit.framework */; };
+		2CE251232F252D8200821C7F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2CE251222F252D8200821C7F /* SwiftUI.framework */; };
+		2CE251342F252D8400821C7F /* RisoraWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2CE2511E2F252D8200821C7F /* RisoraWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		2CB7D6A82F1140D400A7185E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -21,14 +27,50 @@
 			remoteGlobalIDString = 2CB7D6912F1140D200A7185E;
 			remoteInfo = test2;
 		};
+		2CE251322F252D8400821C7F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2CB7D68A2F1140D200A7185E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2CE2511D2F252D8200821C7F;
+			remoteInfo = RisoraWidgetExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		2CE251352F252D8400821C7F /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				2CE251342F252D8400821C7F /* RisoraWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		2CB7D6922F1140D200A7185E /* Risora.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Risora.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2CB7D6A72F1140D400A7185E /* RisoraTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RisoraTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2CB7D6B12F1140D400A7185E /* RisoraUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RisoraUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2CE2501D2F11A30600821C7F /* Risora-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Risora-Info.plist"; sourceTree = "<group>"; };
+		2CE2511E2F252D8200821C7F /* RisoraWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RisoraWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		2CE251202F252D8200821C7F /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		2CE251222F252D8200821C7F /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		2CE2513A2F252E5900821C7F /* Risora.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Risora.entitlements; sourceTree = "<group>"; };
+		2CE2513B2F253ADF00821C7F /* RisoraWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RisoraWidgetExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2CE251382F252D8400821C7F /* Exceptions for "RisoraWidget" folder in "RisoraWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 2CE2511D2F252D8200821C7F /* RisoraWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2CB7D6942F1140D200A7185E /* test2 */ = {
@@ -44,6 +86,14 @@
 		2CB7D6B42F1140D400A7185E /* test2UITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = test2UITests;
+			sourceTree = "<group>";
+		};
+		2CE251242F252D8200821C7F /* RisoraWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2CE251382F252D8400821C7F /* Exceptions for "RisoraWidget" folder in "RisoraWidgetExtension" target */,
+			);
+			path = RisoraWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -70,16 +120,29 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2CE2511B2F252D8200821C7F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2CE251232F252D8200821C7F /* SwiftUI.framework in Frameworks */,
+				2CE251212F252D8200821C7F /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		2CB7D6892F1140D200A7185E = {
 			isa = PBXGroup;
 			children = (
+				2CE2513B2F253ADF00821C7F /* RisoraWidgetExtension.entitlements */,
+				2CE2513A2F252E5900821C7F /* Risora.entitlements */,
 				2CE2501D2F11A30600821C7F /* Risora-Info.plist */,
 				2CB7D6942F1140D200A7185E /* test2 */,
 				2CB7D6AA2F1140D400A7185E /* test2Tests */,
 				2CB7D6B42F1140D400A7185E /* test2UITests */,
+				2CE251242F252D8200821C7F /* RisoraWidget */,
+				2CE2511F2F252D8200821C7F /* Frameworks */,
 				2CB7D6932F1140D200A7185E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,8 +153,18 @@
 				2CB7D6922F1140D200A7185E /* Risora.app */,
 				2CB7D6A72F1140D400A7185E /* RisoraTests.xctest */,
 				2CB7D6B12F1140D400A7185E /* RisoraUITests.xctest */,
+				2CE2511E2F252D8200821C7F /* RisoraWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		2CE2511F2F252D8200821C7F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2CE251202F252D8200821C7F /* WidgetKit.framework */,
+				2CE251222F252D8200821C7F /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -104,10 +177,12 @@
 				2CB7D68E2F1140D200A7185E /* Sources */,
 				2CB7D68F2F1140D200A7185E /* Frameworks */,
 				2CB7D6902F1140D200A7185E /* Resources */,
+				2CE251352F252D8400821C7F /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				2CE251332F252D8400821C7F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				2CB7D6942F1140D200A7185E /* test2 */,
@@ -165,6 +240,28 @@
 			productReference = 2CB7D6B12F1140D400A7185E /* RisoraUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		2CE2511D2F252D8200821C7F /* RisoraWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2CE251392F252D8400821C7F /* Build configuration list for PBXNativeTarget "RisoraWidgetExtension" */;
+			buildPhases = (
+				2CE2511A2F252D8200821C7F /* Sources */,
+				2CE2511B2F252D8200821C7F /* Frameworks */,
+				2CE2511C2F252D8200821C7F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				2CE251242F252D8200821C7F /* RisoraWidget */,
+			);
+			name = RisoraWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = RisoraWidgetExtension;
+			productReference = 2CE2511E2F252D8200821C7F /* RisoraWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -186,6 +283,9 @@
 						CreatedOnToolsVersion = 16.2;
 						TestTargetID = 2CB7D6912F1140D200A7185E;
 					};
+					2CE2511D2F252D8200821C7F = {
+						CreatedOnToolsVersion = 16.2;
+					};
 				};
 			};
 			buildConfigurationList = 2CB7D68D2F1140D200A7185E /* Build configuration list for PBXProject "Risora" */;
@@ -205,6 +305,7 @@
 				2CB7D6912F1140D200A7185E /* Risora */,
 				2CB7D6A62F1140D400A7185E /* RisoraTests */,
 				2CB7D6B02F1140D400A7185E /* RisoraUITests */,
+				2CE2511D2F252D8200821C7F /* RisoraWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -225,6 +326,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		2CB7D6AF2F1140D400A7185E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2CE2511C2F252D8200821C7F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -255,6 +363,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2CE2511A2F252D8200821C7F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -267,6 +382,11 @@
 			isa = PBXTargetDependency;
 			target = 2CB7D6912F1140D200A7185E /* Risora */;
 			targetProxy = 2CB7D6B22F1140D400A7185E /* PBXContainerItemProxy */;
+		};
+		2CE251332F252D8400821C7F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2CE2511D2F252D8200821C7F /* RisoraWidgetExtension */;
+			targetProxy = 2CE251322F252D8400821C7F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -395,6 +515,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Risora.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"test2/Preview Content\"";
@@ -425,6 +546,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Risora.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"test2/Preview Content\"";
@@ -522,6 +644,62 @@
 			};
 			name = Release;
 		};
+		2CE251362F252D8400821C7F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = RisoraWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SMPKNPT46X;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RisoraWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = RisoraWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.onweg.risora.RisoraWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		2CE251372F252D8400821C7F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = RisoraWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = SMPKNPT46X;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RisoraWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = RisoraWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.onweg.risora.RisoraWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -557,6 +735,15 @@
 			buildConfigurations = (
 				2CB7D6C22F1140D400A7185E /* Debug */,
 				2CB7D6C32F1140D400A7185E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2CE251392F252D8400821C7F /* Build configuration list for PBXNativeTarget "RisoraWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2CE251362F252D8400821C7F /* Debug */,
+				2CE251372F252D8400821C7F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

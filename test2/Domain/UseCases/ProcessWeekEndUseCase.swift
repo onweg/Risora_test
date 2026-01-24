@@ -16,17 +16,20 @@ class ProcessWeekEndUseCase: ProcessWeekEndUseCaseProtocol {
     private let calculateDailyLifePointsUseCase: CalculateDailyLifePointsUseCaseProtocol
     private let gameStateRepository: GameStateRepositoryProtocol
     private let lifePointRepository: LifePointRepositoryProtocol
+    private let gameAttemptRepository: GameAttemptRepositoryProtocol
     
     init(
         calculateWeeklyLifePointsUseCase: CalculateWeeklyLifePointsUseCaseProtocol,
         calculateDailyLifePointsUseCase: CalculateDailyLifePointsUseCaseProtocol,
         gameStateRepository: GameStateRepositoryProtocol,
-        lifePointRepository: LifePointRepositoryProtocol
+        lifePointRepository: LifePointRepositoryProtocol,
+        gameAttemptRepository: GameAttemptRepositoryProtocol
     ) {
         self.calculateWeeklyLifePointsUseCase = calculateWeeklyLifePointsUseCase
         self.calculateDailyLifePointsUseCase = calculateDailyLifePointsUseCase
         self.gameStateRepository = gameStateRepository
         self.lifePointRepository = lifePointRepository
+        self.gameAttemptRepository = gameAttemptRepository
     }
     
     func execute(weekStartDate: Date) throws {
@@ -62,10 +65,31 @@ class ProcessWeekEndUseCase: ProcessWeekEndUseCaseProtocol {
         )
         try lifePointRepository.saveLifePoint(lifePoint)
         
+        // Вычисляем новое количество жизней
+        let newLives = max(0, currentGameState.currentLives + xpChange)
+        
+        // Проверяем game over: если жизни упали до 0 или ниже
+        let isGameOver = newLives <= 0
+        
+        // Если игра закончилась, завершаем текущую попытку
+        if isGameOver {
+            if let activeAttempt = gameAttemptRepository.getActiveAttempt() {
+                let completedAttempt = GameAttemptModel(
+                    id: activeAttempt.id,
+                    startDate: activeAttempt.startDate,
+                    endDate: weekEndDate,
+                    startingLives: activeAttempt.startingLives,
+                    endingLives: newLives, // Сохраняем 0 (или отрицательное значение)
+                    isActive: false
+                )
+                try gameAttemptRepository.updateAttempt(completedAttempt)
+            }
+        }
+        
         // Создаем новое состояние игры с обновленными значениями
         let updatedGameState = GameStateModel(
-            currentLives: max(0, currentGameState.currentLives + xpChange),
-            isGameOver: currentGameState.isGameOver,
+            currentLives: newLives,
+            isGameOver: isGameOver,
             lastWeekCalculationDate: weekEndDate,
             updatedAt: Date()
         )

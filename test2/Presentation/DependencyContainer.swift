@@ -28,16 +28,24 @@ class DependencyContainer {
         GoalRepository(context: context)
     }()
     
+    lazy var gameAttemptRepository: GameAttemptRepositoryProtocol = {
+        GameAttemptRepository(context: context)
+    }()
+    
     // UseCases
     lazy var calculateWeeklyLifePointsUseCase: CalculateWeeklyLifePointsUseCaseProtocol = {
         CalculateWeeklyLifePointsUseCase(
             habitRepository: habitRepository,
-            gameStateRepository: gameStateRepository
+            gameStateRepository: gameStateRepository,
+            gameAttemptRepository: gameAttemptRepository
         )
     }()
     
     lazy var calculateDailyLifePointsUseCase: CalculateDailyLifePointsUseCaseProtocol = {
-        CalculateDailyLifePointsUseCase(habitRepository: habitRepository)
+        CalculateDailyLifePointsUseCase(
+            habitRepository: habitRepository,
+            gameAttemptRepository: gameAttemptRepository
+        )
     }()
     
     lazy var processWeekEndUseCase: ProcessWeekEndUseCaseProtocol = {
@@ -45,7 +53,8 @@ class DependencyContainer {
             calculateWeeklyLifePointsUseCase: calculateWeeklyLifePointsUseCase,
             calculateDailyLifePointsUseCase: calculateDailyLifePointsUseCase,
             gameStateRepository: gameStateRepository,
-            lifePointRepository: lifePointRepository
+            lifePointRepository: lifePointRepository,
+            gameAttemptRepository: gameAttemptRepository
         )
     }()
     
@@ -83,7 +92,11 @@ class DependencyContainer {
     }()
     
     lazy var resetGameUseCase: ResetGameUseCaseProtocol = {
-        ResetGameUseCase(gameStateRepository: gameStateRepository)
+        ResetGameUseCase(
+            gameStateRepository: gameStateRepository,
+            gameAttemptRepository: gameAttemptRepository,
+            lifePointRepository: lifePointRepository
+        )
     }()
     
     lazy var getWeeklyHabitAnalysisUseCase: GetWeeklyHabitAnalysisUseCaseProtocol = {
@@ -96,8 +109,28 @@ class DependencyContainer {
     lazy var processAllMissedWeeksUseCase: ProcessAllMissedWeeksUseCaseProtocol = {
         ProcessAllMissedWeeksUseCase(
             processWeekEndUseCase: processWeekEndUseCase,
+            gameStateRepository: gameStateRepository,
+            gameAttemptRepository: gameAttemptRepository
+        )
+    }()
+    
+    lazy var migrateToGameAttemptsUseCase: MigrateToGameAttemptsUseCaseProtocol = {
+        MigrateToGameAttemptsUseCase(
+            context: context,
+            gameAttemptRepository: gameAttemptRepository,
             gameStateRepository: gameStateRepository
         )
+    }()
+    
+    lazy var forceResetCurrentAttemptUseCase: ForceResetCurrentAttemptUseCaseProtocol = {
+        ForceResetCurrentAttemptUseCase(
+            gameStateRepository: gameStateRepository,
+            gameAttemptRepository: gameAttemptRepository
+        )
+    }()
+    
+    lazy var deleteGameAttemptUseCase: DeleteGameAttemptUseCaseProtocol = {
+        DeleteGameAttemptUseCase(gameAttemptRepository: gameAttemptRepository)
     }()
     
     // ViewModels
@@ -136,8 +169,25 @@ class DependencyContainer {
         )
     }
     
+    func makeAttemptsHistoryViewModel() -> AttemptsHistoryViewModel {
+        AttemptsHistoryViewModel(
+            gameAttemptRepository: gameAttemptRepository,
+            lifePointRepository: lifePointRepository,
+            forceResetUseCase: forceResetCurrentAttemptUseCase,
+            deleteGameAttemptUseCase: deleteGameAttemptUseCase
+        )
+    }
+    
     init(context: NSManagedObjectContext) {
         self.context = context
+        
+        // Настраиваем связи между репозиториями
+        // Нужно вызвать после инициализации lazy свойств
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.habitRepository.setGameAttemptRepository(self.gameAttemptRepository)
+            self.lifePointRepository.setGameAttemptRepository(self.gameAttemptRepository)
+        }
     }
 }
 

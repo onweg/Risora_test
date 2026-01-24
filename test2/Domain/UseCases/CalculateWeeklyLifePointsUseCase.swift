@@ -14,15 +14,28 @@ protocol CalculateWeeklyLifePointsUseCaseProtocol {
 class CalculateWeeklyLifePointsUseCase: CalculateWeeklyLifePointsUseCaseProtocol {
     private let habitRepository: HabitRepositoryProtocol
     private let gameStateRepository: GameStateRepositoryProtocol
+    private let gameAttemptRepository: GameAttemptRepositoryProtocol
     
-    init(habitRepository: HabitRepositoryProtocol, gameStateRepository: GameStateRepositoryProtocol) {
+    init(habitRepository: HabitRepositoryProtocol,
+         gameStateRepository: GameStateRepositoryProtocol,
+         gameAttemptRepository: GameAttemptRepositoryProtocol) {
         self.habitRepository = habitRepository
         self.gameStateRepository = gameStateRepository
+        self.gameAttemptRepository = gameAttemptRepository
     }
     
     func execute(weekStartDate: Date) throws -> Int {
         let habits = habitRepository.getAllHabits()
         let calendar = Calendar.current
+        
+        // ВАЖНО: Получаем активную попытку
+        let attemptStartDate: Date
+        if let activeAttempt = gameAttemptRepository.getActiveAttempt() {
+            attemptStartDate = calendar.startOfDay(for: activeAttempt.startDate)
+        } else {
+            // Если нет активной попытки, считаем что расчет начинается с начала недели
+            attemptStartDate = weekStartDate
+        }
         
         var totalXPChange = 0
         
@@ -36,8 +49,8 @@ class CalculateWeeklyLifePointsUseCase: CalculateWeeklyLifePointsUseCaseProtocol
                 let weekEndDate = calendar.date(byAdding: .day, value: 6, to: weekStartDate)!
                 let habitCreatedDate = calendar.startOfDay(for: habit.createdAt)
                 
-                // Начало периода: максимум из начала недели и даты создания привычки
-                let activeStartDate = max(weekStartDate, habitCreatedDate)
+                // Начало периода: максимум из начала недели, даты создания привычки И даты начала попытки
+                let activeStartDate = max(weekStartDate, habitCreatedDate, attemptStartDate)
                 
                 // Конец периода: минимум из конца недели и даты удаления (если есть)
                 var activeEndDate = weekEndDate
@@ -98,8 +111,8 @@ class CalculateWeeklyLifePointsUseCase: CalculateWeeklyLifePointsUseCaseProtocol
                 let weekEndDate = calendar.date(byAdding: .day, value: 6, to: weekStartDate)!
                 let habitCreatedDate = calendar.startOfDay(for: habit.createdAt)
                 
-                // Начало периода: максимум из начала недели и даты создания привычки
-                let activeStartDate = max(weekStartDate, habitCreatedDate)
+                // Начало периода: максимум из начала недели, даты создания привычки И даты начала попытки
+                let activeStartDate = max(weekStartDate, habitCreatedDate, attemptStartDate)
                 
                 // Конец периода: минимум из конца недели и даты удаления (если есть)
                 var activeEndDate = weekEndDate

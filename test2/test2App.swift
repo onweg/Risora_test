@@ -25,6 +25,13 @@ struct test2App: App {
             print("Error initializing game state: \(error)")
         }
         
+        // Выполняем миграцию данных к системе попыток
+        do {
+            try dependencyContainer.migrateToGameAttemptsUseCase.execute()
+        } catch {
+            print("Error migrating to game attempts: \(error)")
+        }
+        
         // Настраиваем уведомления
         NotificationService.shared.requestAuthorization()
         
@@ -76,6 +83,24 @@ struct test2App: App {
         // Очищаем badge при первом запуске
         NotificationService.shared.clearBadge()
     }
+    
+    private func updateWidgetData() {
+        // Принудительно обновляем данные для виджета при запуске
+        print("📱 App launch: Checking goals for widget...")
+        let goals = dependencyContainer.goalRepository.getAllGoals()
+        print("📱 App launch: Found \(goals.count) goals")
+        
+        if !goals.isEmpty {
+            print("📱 App launch: Updating widget data...")
+            WidgetDataService.shared.updateWidgetWithNextGoal(
+                goals: goals,
+                habitRepository: dependencyContainer.habitRepository
+            )
+            print("✅ App launch: Widget data update completed")
+        } else {
+            print("⚠️ App launch: No goals found - widget will show placeholder")
+        }
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -88,6 +113,9 @@ struct test2App: App {
                     // Обновляем содержимое уведомления при каждом запуске приложения
                     // чтобы каждый раз была новая случайная фраза
                     NotificationService.shared.updateNotificationContent()
+                    
+                    // Обновляем данные для виджета при запуске приложения
+                    updateWidgetData()
                 }
         }
     }

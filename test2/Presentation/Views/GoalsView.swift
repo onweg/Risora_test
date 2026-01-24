@@ -19,40 +19,40 @@ struct GoalsView: View {
         NavigationView {
             Group {
                 if viewModel.goals.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "target")
-                            .font(.system(size: 50))
-                            .foregroundColor(.gray)
-                        Text("Нет целей")
-                            .font(.headline)
-                            .foregroundColor(.gray)
-                        Text("Добавьте первую цель, чтобы напомнить себе,\nзачем вы делаете все эти привычки")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    List {
-                    ForEach(viewModel.goals) { goal in
-                        GoalRowView(
-                            goal: goal,
-                            existingHabitIds: viewModel.getExistingHabitIds(from: goal.relatedHabitIds),
-                            onGetHabitName: { habitId in
-                                viewModel.getHabitName(for: habitId)
+                        VStack(spacing: 16) {
+                            Image(systemName: "target")
+                                .font(.system(size: 50))
+                                .foregroundColor(.gray)
+                            Text("Нет целей")
+                                .font(.headline)
+                                .foregroundColor(.gray)
+                            Text("Добавьте первую цель, чтобы напомнить себе,\nзачем вы делаете все эти привычки")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        List {
+                            ForEach(viewModel.goals) { goal in
+                                GoalRowView(
+                                    goal: goal,
+                                    existingHabitIds: viewModel.getExistingHabitIds(from: goal.relatedHabitIds),
+                                    onGetHabitName: { habitId in
+                                        viewModel.getHabitName(for: habitId)
+                                    }
+                                )
                             }
-                        )
-                    }
-                        .onMove(perform: viewModel.moveGoal)
-                        .onDelete { indexSet in
-                            if let firstIndex = indexSet.first {
-                                let goal = viewModel.goals[firstIndex]
-                                viewModel.showDeleteGoalConfirmation(goal.id, goalTitle: goal.title)
+                            .onMove(perform: viewModel.moveGoal)
+                            .onDelete { indexSet in
+                                if let firstIndex = indexSet.first {
+                                    let goal = viewModel.goals[firstIndex]
+                                    viewModel.showDeleteGoalConfirmation(goal.id, goalTitle: goal.title)
+                                }
                             }
                         }
+                        .listStyle(PlainListStyle())
                     }
-                    .listStyle(PlainListStyle())
-                }
             }
             .navigationTitle("Мои цели")
             .navigationBarTitleDisplayMode(.large)

@@ -40,6 +40,15 @@ class GoalsViewModel: ObservableObject {
         }
         
         goals = goalRepository.getAllGoals()
+        
+        // ВСЕГДА обновляем данные для виджета (даже если целей нет - очистим старые данные)
+        print("📱 GoalsViewModel: Loading goals, count = \(goals.count)")
+        if !goals.isEmpty {
+            print("📱 GoalsViewModel: Updating widget with \(goals.count) goals")
+            WidgetDataService.shared.updateWidgetWithNextGoal(goals: goals, habitRepository: habitRepository)
+        } else {
+            print("⚠️ GoalsViewModel: No goals found - widget will show placeholder")
+        }
     }
     
     func createGoal(title: String, motivation: String, relatedHabitIds: [UUID]) {
@@ -51,6 +60,10 @@ class GoalsViewModel: ObservableObject {
             )
             try goalRepository.createGoal(goal)
             loadData()
+            // Обновляем виджет после создания новой цели
+            if !goals.isEmpty {
+                WidgetDataService.shared.updateWidgetWithNextGoal(goals: goals, habitRepository: habitRepository)
+            }
         } catch {
             print("Error creating goal: \(error)")
         }

@@ -14,13 +14,16 @@ protocol ProcessAllMissedWeeksUseCaseProtocol {
 class ProcessAllMissedWeeksUseCase: ProcessAllMissedWeeksUseCaseProtocol {
     private let processWeekEndUseCase: ProcessWeekEndUseCaseProtocol
     private let gameStateRepository: GameStateRepositoryProtocol
+    private let gameAttemptRepository: GameAttemptRepositoryProtocol
     
     init(
         processWeekEndUseCase: ProcessWeekEndUseCaseProtocol,
-        gameStateRepository: GameStateRepositoryProtocol
+        gameStateRepository: GameStateRepositoryProtocol,
+        gameAttemptRepository: GameAttemptRepositoryProtocol
     ) {
         self.processWeekEndUseCase = processWeekEndUseCase
         self.gameStateRepository = gameStateRepository
+        self.gameAttemptRepository = gameAttemptRepository
     }
     
     func execute() throws {
@@ -32,6 +35,13 @@ class ProcessAllMissedWeeksUseCase: ProcessAllMissedWeeksUseCaseProtocol {
             return // Игра не инициализирована
         }
         
+        // ВАЖНО: Получаем активную попытку для определения стартовой даты
+        guard let activeAttempt = gameAttemptRepository.getActiveAttempt() else {
+            return // Нет активной попытки
+        }
+        
+        let attemptStartWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: activeAttempt.startDate))!
+        
         var weekStartToProcess: Date
         
         if let lastCalculation = gameState.lastWeekCalculationDate {
@@ -42,12 +52,22 @@ class ProcessAllMissedWeeksUseCase: ProcessAllMissedWeeksUseCaseProtocol {
                 return
             }
             
-            // Начинаем с недели после последней обработанной
-            weekStartToProcess = calendar.date(byAdding: .weekOfYear, value: 1, to: lastWeekStart)!
+            // ВАЖНО: Если последний расчет был ДО начала текущей попытки,
+            // начинаем с недели после начала попытки, а не с lastCalculation
+            if lastWeekStart < attemptStartWeek {
+                weekStartToProcess = calendar.date(byAdding: .weekOfYear, value: 1, to: attemptStartWeek)!
+            } else {
+                // Начинаем с недели после последней обработанной
+                weekStartToProcess = calendar.date(byAdding: .weekOfYear, value: 1, to: lastWeekStart)!
+            }
         } else {
-            // Если никогда не было расчета, обрабатываем все недели с момента создания первой привычки
-            // Для простоты обрабатываем только текущую неделю минус 1
-            weekStartToProcess = calendar.date(byAdding: .weekOfYear, value: -1, to: currentWeekStart)!
+            // Если никогда не было расчета, начинаем с недели после начала попытки
+            weekStartToProcess = calendar.date(byAdding: .weekOfYear, value: 1, to: attemptStartWeek)!
+        }
+        
+        // ВАЖНО: Не обрабатываем недели которые были ДО начала текущей попытки
+        if weekStartToProcess < attemptStartWeek {
+            weekStartToProcess = attemptStartWeek
         }
         
         // Обрабатываем все пропущенные недели до текущей (не включая текущую)

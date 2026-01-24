@@ -11,9 +11,9 @@ struct MainView: View {
     @StateObject private var habitsListViewModel: HabitsListViewModel
     @StateObject private var chartViewModel: LifePointsChartViewModel
     @StateObject private var goalsViewModel: GoalsViewModel
+    @StateObject private var attemptsHistoryViewModel: AttemptsHistoryViewModel
     
     private let checkGameOverUseCase: CheckGameOverUseCaseProtocol
-    private let resetGameUseCase: ResetGameUseCaseProtocol
     @State private var isGameOver: Bool = false
     @State private var selectedTab: Int = 0
     
@@ -21,16 +21,14 @@ struct MainView: View {
         _habitsListViewModel = StateObject(wrappedValue: container.makeHabitsListViewModel())
         _chartViewModel = StateObject(wrappedValue: container.makeLifePointsChartViewModel())
         _goalsViewModel = StateObject(wrappedValue: container.makeGoalsViewModel())
+        _attemptsHistoryViewModel = StateObject(wrappedValue: container.makeAttemptsHistoryViewModel())
         self.checkGameOverUseCase = container.checkGameOverUseCase
-        self.resetGameUseCase = container.resetGameUseCase
     }
     
     var body: some View {
         Group {
             if isGameOver {
-                GameOverView(chartViewModel: chartViewModel) {
-                    resetGame()
-                }
+                GameOverView(chartViewModel: chartViewModel)
             } else {
                 TabView(selection: $selectedTab) {
                     HabitsListView(viewModel: habitsListViewModel)
@@ -50,6 +48,12 @@ struct MainView: View {
                             Label("Цели", systemImage: "target")
                         }
                         .tag(2)
+                    
+                    AttemptsHistoryView(viewModel: attemptsHistoryViewModel)
+                        .tabItem {
+                            Label("Попытки", systemImage: "clock.arrow.circlepath")
+                        }
+                        .tag(3)
                 }
             }
         }
@@ -63,17 +67,6 @@ struct MainView: View {
     
     private func checkGameOver() {
         isGameOver = checkGameOverUseCase.execute()
-    }
-    
-    private func resetGame() {
-        do {
-            try resetGameUseCase.execute()
-            isGameOver = false
-            habitsListViewModel.loadData()
-            chartViewModel.loadData()
-        } catch {
-            print("Error resetting game: \(error)")
-        }
     }
 }
 

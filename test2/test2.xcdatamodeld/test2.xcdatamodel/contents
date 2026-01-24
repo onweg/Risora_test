@@ -20,6 +20,7 @@
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="weekStartDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="habit" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Habit" inverseName="completions" inverseEntity="Habit"/>
+        <relationship name="gameAttempt" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="GameAttempt" inverseName="habitCompletions" inverseEntity="GameAttempt"/>
     </entity>
     <entity name="GameState" representedClassName="GameState" syncable="YES" codeGenerationType="class">
         <attribute name="currentLives" optional="YES" attributeType="Integer 16" defaultValueString="100" usesScalarValueType="YES"/>
@@ -33,6 +34,17 @@
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="value" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="weekStartDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="gameAttempt" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="GameAttempt" inverseName="lifePoints" inverseEntity="GameAttempt"/>
+    </entity>
+    <entity name="GameAttempt" representedClassName="GameAttempt" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="startDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="startingLives" optional="YES" attributeType="Integer 16" defaultValueString="100" usesScalarValueType="YES"/>
+        <attribute name="endingLives" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="isActive" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <relationship name="lifePoints" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="LifePoint" inverseName="gameAttempt" inverseEntity="LifePoint"/>
+        <relationship name="habitCompletions" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="HabitCompletion" inverseName="gameAttempt" inverseEntity="HabitCompletion"/>
     </entity>
     <entity name="Item" representedClassName="Item" syncable="YES" codeGenerationType="class">
         <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -48,9 +60,10 @@
     <elements>
         <element name="GameState" positionX="-63" positionY="9" width="128" height="89"/>
         <element name="Habit" positionX="-54" positionY="-18" width="128" height="179"/>
-        <element name="HabitCompletion" positionX="81" positionY="-18" width="128" height="89"/>
+        <element name="HabitCompletion" positionX="81" positionY="-18" width="128" height="104"/>
         <element name="Item" positionX="-63" positionY="117" width="128" height="44"/>
-        <element name="LifePoint" positionX="81" positionY="9" width="128" height="89"/>
+        <element name="LifePoint" positionX="81" positionY="9" width="128" height="104"/>
         <element name="Goal" positionX="-63" positionY="198" width="128" height="104"/>
+        <element name="GameAttempt" positionX="-63" positionY="270" width="128" height="149"/>
     </elements>
 </model>

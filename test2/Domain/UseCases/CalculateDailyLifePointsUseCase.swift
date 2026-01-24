@@ -13,15 +13,26 @@ protocol CalculateDailyLifePointsUseCaseProtocol {
 
 class CalculateDailyLifePointsUseCase: CalculateDailyLifePointsUseCaseProtocol {
     private let habitRepository: HabitRepositoryProtocol
+    private let gameAttemptRepository: GameAttemptRepositoryProtocol
     
-    init(habitRepository: HabitRepositoryProtocol) {
+    init(habitRepository: HabitRepositoryProtocol,
+         gameAttemptRepository: GameAttemptRepositoryProtocol) {
         self.habitRepository = habitRepository
+        self.gameAttemptRepository = gameAttemptRepository
     }
     
     func execute(date: Date) throws -> Int {
         let habits = habitRepository.getAllHabits()
         let calendar = Calendar.current
         let dayStart = calendar.startOfDay(for: date)
+        
+        // ВАЖНО: Получаем активную попытку и не считаем дни до её начала
+        if let activeAttempt = gameAttemptRepository.getActiveAttempt() {
+            let attemptStartDate = calendar.startOfDay(for: activeAttempt.startDate)
+            if dayStart < attemptStartDate {
+                return 0 // День был до начала текущей попытки, не считаем
+            }
+        }
         
         var totalXPChange = 0
         
