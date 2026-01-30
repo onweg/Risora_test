@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreData
 
 protocol ProcessAllMissedWeeksUseCaseProtocol {
     func execute() throws
@@ -27,6 +28,11 @@ class ProcessAllMissedWeeksUseCase: ProcessAllMissedWeeksUseCaseProtocol {
     }
     
     func execute() throws {
+        // 0. ПРИНУДИТЕЛЬНАЯ ПРИВЯЗКА ДАННЫХ К ТЕКУЩЕЙ ПОПЫТКЕ (Fix для "сиротских" данных)
+        if let activeAttempt = gameAttemptRepository.getActiveAttempt() {
+            try linkOrphanedDataToAttempt(activeAttempt.id)
+        }
+
         let calendar = Calendar.current
         let today = Date()
         let currentWeekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today))!
@@ -52,17 +58,11 @@ class ProcessAllMissedWeeksUseCase: ProcessAllMissedWeeksUseCaseProtocol {
                 return
             }
             
-            // ВАЖНО: Если последний расчет был ДО начала текущей попытки,
-            // начинаем с недели после начала попытки, а не с lastCalculation
-            if lastWeekStart < attemptStartWeek {
-                weekStartToProcess = calendar.date(byAdding: .weekOfYear, value: 1, to: attemptStartWeek)!
-            } else {
-                // Начинаем с недели после последней обработанной
-                weekStartToProcess = calendar.date(byAdding: .weekOfYear, value: 1, to: lastWeekStart)!
-            }
+            // Начинаем с недели после последней обработанной
+            weekStartToProcess = calendar.date(byAdding: .weekOfYear, value: 1, to: lastWeekStart)!
         } else {
-            // Если никогда не было расчета, начинаем с недели после начала попытки
-            weekStartToProcess = calendar.date(byAdding: .weekOfYear, value: 1, to: attemptStartWeek)!
+            // Если никогда не было расчета, начинаем с самой первой недели попытки
+            weekStartToProcess = attemptStartWeek
         }
         
         // ВАЖНО: Не обрабатываем недели которые были ДО начала текущей попытки
@@ -74,6 +74,37 @@ class ProcessAllMissedWeeksUseCase: ProcessAllMissedWeeksUseCaseProtocol {
         while weekStartToProcess < currentWeekStart {
             try processWeekEndUseCase.execute(weekStartDate: weekStartToProcess)
             weekStartToProcess = calendar.date(byAdding: .weekOfYear, value: 1, to: weekStartToProcess)!
+        }
+    }
+
+    private func linkOrphanedDataToAttempt(_ attemptId: UUID) throws {
+        // 1. Ищем LifePoints без привязки к попытке
+        let lpRequest: NSFetchRequest<LifePoint> = LifePoint.fetchRequest()
+        lpRequest.predicate = NSPredicate(format: "gameAttempt == nil")
+        
+        // 2. Ищем HabitCompletions без привязки к попытке
+        let hcRequest: NSFetchRequest<HabitCompletion> = HabitCompletion.fetchRequest()
+        hcRequest.predicate = NSPredicate(format: "gameAttempt == nil")
+        
+        let attemptRequest: NSFetchRequest<GameAttempt> = GameAttempt.fetchRequest()
+        attemptRequest.predicate = NSPredicate(format: "id == %@", attemptId as CVarArg)
+        
+        let context = (gameStateRepository as? GameStateRepository)?.context // Взлом для доступа к контексту
+        guard let ctx = context, let attemptEntity = try ctx.fetch(attemptRequest).first else { return }
+        
+        let orphanedLPs = try ctx.fetch(lpRequest)
+        for lp in orphanedLPs {
+            lp.gameAttempt = attemptEntity
+        }
+        
+        let orphanedHCs = try ctx.fetch(hcRequest)
+        for hc in orphanedHCs {
+            hc.gameAttempt = attemptEntity
+        }
+        
+        if !orphanedLPs.isEmpty || !orphanedHCs.isEmpty {
+            try ctx.save()
+            print("✅ Linked \(orphanedLPs.count) LifePoints and \(orphanedHCs.count) Completions to attempt \(attemptId)")
         }
     }
 }

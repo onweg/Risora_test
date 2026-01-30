@@ -25,7 +25,8 @@ class CalculateWeeklyLifePointsUseCase: CalculateWeeklyLifePointsUseCaseProtocol
     }
     
     func execute(weekStartDate: Date) throws -> Int {
-        let habits = habitRepository.getAllHabits()
+        // ВАЖНО: Используем привычки, которые были активны на ту неделю (включая удаленные позже)
+        let habits = habitRepository.getAllHabitsIncludingDeleted(forDate: weekStartDate)
         let calendar = Calendar.current
         
         // ВАЖНО: Получаем активную попытку

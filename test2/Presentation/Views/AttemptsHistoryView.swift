@@ -124,24 +124,24 @@ struct AttemptDetailView: View {
                     .padding(.horizontal)
                     
                     // График жизней
-                    if !viewModel.selectedAttemptLifePoints.isEmpty {
+                    if !viewModel.selectedAttemptChartData.isEmpty {
                         VStack(alignment: .leading, spacing: 16) {
                             Text("График жизней")
                                 .font(.headline)
                                 .padding(.horizontal)
                             
                             Chart {
-                                ForEach(Array(viewModel.selectedAttemptLifePoints.enumerated()), id: \.element.id) { index, point in
+                                ForEach(viewModel.selectedAttemptChartData) { point in
                                     LineMark(
-                                        x: .value("Неделя", index),
-                                        y: .value("Жизни", point.value)
+                                        x: .value("Неделя", point.weekIndex),
+                                        y: .value("Жизни", point.lives)
                                     )
                                     .foregroundStyle(lineColor())
                                     .interpolationMethod(.catmullRom)
                                     
                                     PointMark(
-                                        x: .value("Неделя", index),
-                                        y: .value("Жизни", point.value)
+                                        x: .value("Неделя", point.weekIndex),
+                                        y: .value("Жизни", point.lives)
                                     )
                                     .foregroundStyle(lineColor())
                                 }
@@ -199,6 +199,33 @@ struct AttemptDetailView: View {
                     .background(Color(.systemGray6))
                     .cornerRadius(12)
                     .padding(.horizontal)
+                    
+                    // Анализ за прошлую неделю
+                    if let report = viewModel.lastWeekReport {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Анализ за последнюю неделю")
+                                .font(.headline)
+                            
+                            HStack {
+                                Text("Итого за неделю:")
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text("\(report.totalXPChange > 0 ? "+" : "")\(report.totalXPChange)")
+                                    .font(.title3.bold())
+                                    .foregroundColor(report.totalXPChange >= 0 ? .green : .red)
+                            }
+                            .padding(.bottom, 8)
+                            
+                            ForEach(report.analyses) { analysis in
+                                HabitAnalysisRow(analysis: analysis)
+                                Divider()
+                            }
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+                        .padding(.horizontal)
+                    }
                 }
                 .padding(.vertical)
             }

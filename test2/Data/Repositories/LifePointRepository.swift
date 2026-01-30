@@ -123,7 +123,7 @@ class LifePointRepository: LifePointRepositoryProtocol {
                 activeAttempt.id as CVarArg
             )
         } else {
-            request.predicate = NSPredicate(format: "weekStartDate == %@", weekStartDate as NSDate)
+        request.predicate = NSPredicate(format: "weekStartDate == %@", weekStartDate as NSDate)
         }
         
         do {

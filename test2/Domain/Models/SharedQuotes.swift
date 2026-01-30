@@ -1,14 +1,10 @@
 //
-//  RisoraWidget.swift
-//  RisoraWidget
-//
-//  Created by Arkadiy on 24.01.2026.
+//  SharedQuotes.swift
+//  test2
 //
 
-import WidgetKit
-import SwiftUI
+import Foundation
 
-// ВАЖНО: Дублируем SharedQuotes здесь, чтобы виджет имел к ним доступ без проблем с Target Membership
 struct SharedQuotes {
     static let quotes: [String] = [
         "Боль может сделать тебя сильнее, а может сжечь дотла, выбор остается за вами.",
@@ -28,7 +24,7 @@ struct SharedQuotes {
         "Говорите правду. Она как бумеранг и, подобно лжи, способна возвращаться.",
         "Люди редко замечают, когда для них что-то делают; они замечают это, когда для них перестают это делать.",
         "Девяносто процентов наших забот касаются того, что не случится.",
-        "Успех – это умение двигаться от неудачи к неудачам, не теряя энтузиазма.",
+        "Успех – это умение двигаться от неудачи к неудаче, не теряя энтузиазма.",
         "Если у вас есть выбор между двумя людьми, то выбирайте второго, потому что если бы вы по-настоящему любили первого, то второй бы и не появился.",
         "Чтобы найти новый путь, нужно уйти со старой дороги.",
         "Только действия человека говорят о его личности и его отношении к вам.",
@@ -53,12 +49,12 @@ struct SharedQuotes {
         "Лучше красиво делать, чем красиво говорить.",
         "Куда бы вы ни стремились, начните оттуда, где вы находитесь.",
         "Когда ты одинок, это не значит, что ты слабый, это значит, что ты достаточно сильный, чтобы ждать то, что ты заслуживаешь.",
-        "Будьте внимательны к своими мыслями, они – начало поступков.",
+        "Будьте внимательны к своим мыслям, они – начало поступков.",
         "Не всегда просит прощения тот, кто виноват. Просит прощения тот, кто дорожит отношениями.",
         "Друзей выбираем мы сами, но лучших из них оставляет время.",
         "Порой за счастье нужно бороться с самим собой, с ленью, с гордынею и привязанностями.",
         "Большинство людей проводит жизнь в плену, потому что живут лишь будущим и прошлым — они отрицают настоящее. Хотя настоящее – это то, с чего всё начинается.",
-        "Истинное отношение к человеку не зависит от настроения и обстоятельства.",
+        "Истинное отношение к человеку не зависит от настроения и обстоятельств.",
         "Любовь – это бесценный дар. Это единственная вещь, которую мы можем подарить, и всё же она у нас остаётся.",
         "Не полагайтесь слишком сильно на кого-нибудь в этом мире, потому что ваша собственная тень поедает вас, когда вы в темноте.",
         "В этом мире есть только один способ заслужить любовь – перестать требовать её и начать дарить.",
@@ -100,160 +96,5 @@ struct SharedQuotes {
         let startDate = calendar.date(from: DateComponents(year: 2020, month: 1, day: 1)) ?? today
         let daysSinceStart = calendar.dateComponents([.day], from: startDate, to: today).day ?? 0
         return daysSinceStart % quotes.count
-    }
-}
-
-// Данные цели, которые приложение сохраняет в App Group для виджета
-struct WidgetGoalData: Codable {
-    let goalId: String
-    let title: String
-    let motivation: String
-    let habitNames: [String]
-    let lastUpdateDate: Date
-}
-
-struct WidgetDataService {
-    static func loadWidgetData() -> WidgetGoalData? {
-        let appGroupId = "group.com.risora.widget"
-        print("🔍 Widget: Attempting to load data from App Group: \(appGroupId)")
-        
-        guard let userDefaults = UserDefaults(suiteName: appGroupId) else {
-            print("❌ Widget: Cannot access App Group '\(appGroupId)'")
-            return nil
-        }
-        
-        guard let data = userDefaults.data(forKey: "widgetGoalData") else {
-            print("⚠️ Widget: No data found with key 'widgetGoalData'")
-            return nil
-        }
-        
-        guard let widgetData = try? JSONDecoder().decode(WidgetGoalData.self, from: data) else {
-            print("❌ Widget: Failed to decode widget data")
-            return nil
-        }
-        
-        return widgetData
-    }
-}
-
-struct GoalWidgetEntry: TimelineEntry {
-    let date: Date
-    let goalTitle: String
-    let goalMotivation: String
-    let habitNames: [String]
-    let quote: String
-}
-
-struct GoalWidgetProvider: TimelineProvider {
-    func placeholder(in context: Context) -> GoalWidgetEntry {
-        GoalWidgetEntry(
-            date: Date(),
-            goalTitle: "Пример цели",
-            goalMotivation: "Помни зачем ты это делаешь",
-            habitNames: ["Привычка 1", "Привычка 2"],
-            quote: SharedQuotes.quotes[0]
-        )
-    }
-
-    func getSnapshot(in context: Context, completion: @escaping (GoalWidgetEntry) -> Void) {
-        completion(loadGoalEntry())
-    }
-
-    func getTimeline(in context: Context, completion: @escaping (Timeline<GoalWidgetEntry>) -> Void) {
-        let entry = loadGoalEntry()
-        let calendar = Calendar.current
-        let today = Date()
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
-        let nextUpdate = calendar.startOfDay(for: tomorrow)
-        
-        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
-    }
-
-    private func loadGoalEntry() -> GoalWidgetEntry {
-        let quoteIndex = SharedQuotes.getQuoteIndexForToday()
-        let quote = SharedQuotes.quotes[quoteIndex]
-        
-        if let widgetData = WidgetDataService.loadWidgetData() {
-            return GoalWidgetEntry(
-                date: Date(),
-                goalTitle: widgetData.title,
-                goalMotivation: widgetData.motivation,
-                habitNames: widgetData.habitNames,
-                quote: quote
-            )
-        }
-        
-        return GoalWidgetEntry(
-            date: Date(),
-            goalTitle: "Создайте цель",
-            goalMotivation: "Откройте приложение и добавьте цели",
-            habitNames: [],
-            quote: quote
-        )
-    }
-}
-
-struct RisoraWidgetEntryView: View {
-    var entry: GoalWidgetProvider.Entry
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(entry.quote)
-                .font(.caption)
-                .fontWeight(.medium)
-                .foregroundColor(.primary)
-                .italic()
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(6)
-                .background(Color.primary.opacity(0.05))
-                .cornerRadius(6)
-            
-            Divider()
-                .padding(.vertical, 1)
-            
-            Text(entry.goalTitle)
-                .font(.subheadline)
-                .fontWeight(.bold)
-                .foregroundColor(.blue)
-                .lineLimit(1)
-            
-            Text(entry.goalMotivation)
-                .font(.system(size: 10))
-                .foregroundColor(.secondary)
-                .lineLimit(2)
-            
-            Spacer(minLength: 0)
-            
-            if !entry.habitNames.isEmpty {
-                HStack(spacing: 4) {
-                    Image(systemName: "circle.fill")
-                        .font(.system(size: 5))
-                        .foregroundColor(.blue)
-                    Text(entry.habitNames.prefix(2).joined(separator: ", "))
-                        .font(.system(size: 9))
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                }
-            }
-        }
-        .padding(10)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .containerBackground(.fill.tertiary, for: .widget)
-        .widgetURL(URL(string: "risora://quote?index=\(SharedQuotes.getQuoteIndexForToday())"))
-    }
-}
-
-struct RisoraWidget: Widget {
-    let kind: String = "RisoraWidget"
-
-    var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: GoalWidgetProvider()) { entry in
-            RisoraWidgetEntryView(entry: entry)
-        }
-        .configurationDisplayName("Цель")
-        .description("Ваша цель, привычки и мотивирующая цитата.")
-        .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

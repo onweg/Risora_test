@@ -9,25 +9,28 @@ import Foundation
 import Combine
 
 class AttemptsHistoryViewModel: ObservableObject {
+    struct ChartPoint: Identifiable {
+        let id = UUID()
+        let weekIndex: Int
+        let lives: Int
+        let date: Date
+    }
+    
     @Published var attempts: [GameAttemptModel] = []
     @Published var selectedAttempt: GameAttemptModel?
-    @Published var selectedAttemptLifePoints: [LifePointModel] = []
-    @Published var showForceResetAlert = false
-    @Published var forceResetMessage = ""
+    @Published var selectedAttemptChartData: [ChartPoint] = []
+    @Published var lastWeekReport: WeeklyReportModel? = nil
     
     private let gameAttemptRepository: GameAttemptRepositoryProtocol
     private let lifePointRepository: LifePointRepositoryProtocol
-    private let forceResetUseCase: ForceResetCurrentAttemptUseCaseProtocol
-    private let deleteGameAttemptUseCase: DeleteGameAttemptUseCaseProtocol
+    private let getWeeklyHabitAnalysisUseCase: GetWeeklyHabitAnalysisUseCaseProtocol
     
     init(gameAttemptRepository: GameAttemptRepositoryProtocol,
          lifePointRepository: LifePointRepositoryProtocol,
-         forceResetUseCase: ForceResetCurrentAttemptUseCaseProtocol,
-         deleteGameAttemptUseCase: DeleteGameAttemptUseCaseProtocol) {
+         getWeeklyHabitAnalysisUseCase: GetWeeklyHabitAnalysisUseCaseProtocol) {
         self.gameAttemptRepository = gameAttemptRepository
         self.lifePointRepository = lifePointRepository
-        self.forceResetUseCase = forceResetUseCase
-        self.deleteGameAttemptUseCase = deleteGameAttemptUseCase
+        self.getWeeklyHabitAnalysisUseCase = getWeeklyHabitAnalysisUseCase
     }
     
     func loadAttempts() {
@@ -36,7 +39,36 @@ class AttemptsHistoryViewModel: ObservableObject {
     
     func loadLifePoints(for attempt: GameAttemptModel) {
         selectedAttempt = attempt
-        selectedAttemptLifePoints = lifePointRepository.getLifePointsForAttempt(attempt.id)
+        let lifePoints = lifePointRepository.getLifePointsForAttempt(attempt.id)
+        
+        var data: [ChartPoint] = []
+        var cumulativeLives = attempt.startingLives
+        
+        // Точка 0: начало попытки
+        data.append(ChartPoint(
+            weekIndex: 0,
+            lives: cumulativeLives,
+            date: attempt.startDate
+        ))
+        
+        // Последующие точки: результаты каждой недели
+        for (index, point) in lifePoints.enumerated() {
+            cumulativeLives += point.value
+            data.append(ChartPoint(
+                weekIndex: index + 1,
+                lives: max(0, cumulativeLives),
+                date: point.date
+            ))
+        }
+        
+        selectedAttemptChartData = data
+        
+        // Загружаем анализ за последнюю неделю этой попытки
+        if let lastPoint = lifePoints.last {
+            lastWeekReport = getWeeklyHabitAnalysisUseCase.execute(weekStartDate: lastPoint.weekStartDate)
+        } else {
+            lastWeekReport = nil
+        }
     }
     
     func formatDate(_ date: Date) -> String {
@@ -75,39 +107,5 @@ class AttemptsHistoryViewModel: ObservableObject {
             return "green"
         }
         return "red"
-    }
-    
-    func forceResetCurrentAttempt() {
-        do {
-            try forceResetUseCase.execute()
-            forceResetMessage = "Жизни восстановлены! Перезапустите приложение."
-            showForceResetAlert = true
-        } catch {
-            forceResetMessage = "Ошибка: \(error.localizedDescription)"
-            showForceResetAlert = true
-        }
-    }
-    
-    func deleteGarbageAttempts() {
-        do {
-            // Удаляем попытки, которые начались и закончились 19 января
-            let calendar = Calendar.current
-            var dateComponents = DateComponents()
-            dateComponents.year = 2026
-            dateComponents.month = 1
-            dateComponents.day = 19
-            let january19 = calendar.date(from: dateComponents) ?? Date()
-            
-            let deletedCount = try deleteGameAttemptUseCase.deleteAttemptsStartedAndEndedOnSameDay(date: january19)
-            
-            // Перезагружаем список попыток
-            loadAttempts()
-            
-            forceResetMessage = "Удалено мусорных сессий: \(deletedCount)"
-            showForceResetAlert = true
-        } catch {
-            forceResetMessage = "Ошибка при удалении: \(error.localizedDescription)"
-            showForceResetAlert = true
-        }
     }
 }

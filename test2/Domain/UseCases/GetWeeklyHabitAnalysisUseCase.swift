@@ -19,13 +19,15 @@ class GetWeeklyHabitAnalysisUseCase: GetWeeklyHabitAnalysisUseCaseProtocol {
     }
     
     func execute(weekStartDate: Date) -> WeeklyReportModel? {
-        guard let lifePoint = lifePointRepository.getLifePointForWeek(weekStartDate: weekStartDate) else {
+        // Мы показываем анализ только если неделя уже была рассчитана и сохранена в LifePoints
+        guard let savedLifePoint = lifePointRepository.getLifePointForWeek(weekStartDate: weekStartDate) else {
             return nil
         }
         
         let habits = habitRepository.getAllHabitsIncludingDeleted(forDate: weekStartDate)
         let calendar = Calendar.current
         var analyses: [HabitWeeklyAnalysisModel] = []
+        var totalXPChange = 0
         
         for habit in habits {
             var dayAnalyses: [HabitWeeklyAnalysisModel.DayAnalysis] = []
@@ -58,7 +60,7 @@ class GetWeeklyHabitAnalysisUseCase: GetWeeklyHabitAnalysisUseCaseProtocol {
                 // Считаем только если привычка была активна в этот день
                 if dayStart >= activeStartDate && dayStart <= activeEndDate {
                     if habit.type == .good {
-                        // Пытаемся найти цель (дневную)
+                        // ... (логика для хороших привычек без изменений) ...
                         if habit.targetType == .daily {
                             target = habit.targetValue
                         } else if habit.dailyTarget > 0 {
@@ -77,9 +79,12 @@ class GetWeeklyHabitAnalysisUseCase: GetWeeklyHabitAnalysisUseCaseProtocol {
                         }
                     } else {
                         // Вредная привычка
-                        let threshold = habit.dailyTarget
-                        if completions > threshold {
-                            impact = -habit.xpValue * (completions - threshold)
+                        // ВАЖНО: Если есть недельная цель, дневные штрафы не показываем
+                        if habit.weeklyTarget == 0 {
+                            let threshold = habit.dailyTarget
+                            if completions > threshold {
+                                impact = -habit.xpValue * (completions - threshold)
+                            }
                         }
                     }
                 }
@@ -137,11 +142,12 @@ class GetWeeklyHabitAnalysisUseCase: GetWeeklyHabitAnalysisUseCaseProtocol {
                 details: dayAnalyses,
                 weeklyTargetImpact: weeklyTargetImpact
             ))
+            totalXPChange += habitTotalImpact
         }
         
         return WeeklyReportModel(
             weekStartDate: weekStartDate,
-            totalXPChange: lifePoint.value,
+            totalXPChange: savedLifePoint.value,
             analyses: analyses.sorted(by: { abs($0.totalImpact) > abs($1.totalImpact) })
         )
     }

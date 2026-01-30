@@ -99,9 +99,17 @@ class HabitRepository: HabitRepositoryProtocol {
             
             return habits.compactMap { habit in
                 // Показываем привычку, если она не удалена до выбранной даты
+                // И если она была создана не позже этой даты
+                let selectedDateStart = Calendar.current.startOfDay(for: forDate)
+                let habitCreatedDate = Calendar.current.startOfDay(for: habit.createdAt ?? Date())
+                
+                if habitCreatedDate > selectedDateStart {
+                    return nil // Привычка создана позже выбранной даты
+                }
+                
                 if let deletedFromDate = habit.deletedFromDate {
                     let deletedDate = Calendar.current.startOfDay(for: deletedFromDate)
-                    if deletedDate <= selectedDate {
+                    if deletedDate <= selectedDateStart {
                         return nil // Привычка удалена до выбранной даты, не показываем
                     }
                 }
@@ -186,7 +194,7 @@ class HabitRepository: HabitRepositoryProtocol {
                 activeAttempt.id as CVarArg
             )
         } else {
-            request.predicate = NSPredicate(format: "date >= %@ AND date <= %@", weekStartDate as NSDate, weekEndDate as NSDate)
+        request.predicate = NSPredicate(format: "date >= %@ AND date <= %@", weekStartDate as NSDate, weekEndDate as NSDate)
         }
         
         do {
@@ -228,12 +236,12 @@ class HabitRepository: HabitRepositoryProtocol {
                 activeAttempt.id as CVarArg
             )
         } else {
-            request.predicate = NSPredicate(
-                format: "habit.id == %@ AND date >= %@ AND date <= %@",
-                habitId as CVarArg,
-                weekStartDate as NSDate,
-                weekEndDate as NSDate
-            )
+        request.predicate = NSPredicate(
+            format: "habit.id == %@ AND date >= %@ AND date <= %@",
+            habitId as CVarArg,
+            weekStartDate as NSDate,
+            weekEndDate as NSDate
+        )
         }
         
         do {
@@ -263,12 +271,12 @@ class HabitRepository: HabitRepositoryProtocol {
                 activeAttempt.id as CVarArg
             )
         } else {
-            request.predicate = NSPredicate(
-                format: "habit.id == %@ AND date >= %@ AND date <= %@",
-                habitId as CVarArg,
-                weekStartDate as NSDate,
-                weekEndDate as NSDate
-            )
+        request.predicate = NSPredicate(
+            format: "habit.id == %@ AND date >= %@ AND date <= %@",
+            habitId as CVarArg,
+            weekStartDate as NSDate,
+            weekEndDate as NSDate
+        )
         }
         
         do {
@@ -304,7 +312,7 @@ class HabitRepository: HabitRepositoryProtocol {
                 activeAttempt.id as CVarArg
             )
         } else {
-            request.predicate = NSPredicate(format: "date >= %@ AND date < %@", startOfDay as NSDate, endOfDay as NSDate)
+        request.predicate = NSPredicate(format: "date >= %@ AND date < %@", startOfDay as NSDate, endOfDay as NSDate)
         }
         
         do {
@@ -401,12 +409,12 @@ class HabitRepository: HabitRepositoryProtocol {
                 activeAttempt.id as CVarArg
             )
         } else {
-            request.predicate = NSPredicate(
-                format: "habit.id == %@ AND date >= %@ AND date < %@",
-                habitId as CVarArg,
-                startOfDay as NSDate,
-                endOfDay as NSDate
-            )
+        request.predicate = NSPredicate(
+            format: "habit.id == %@ AND date >= %@ AND date < %@",
+            habitId as CVarArg,
+            startOfDay as NSDate,
+            endOfDay as NSDate
+        )
         }
         
         let completions = try context.fetch(request)
@@ -439,12 +447,12 @@ class HabitRepository: HabitRepositoryProtocol {
                 activeAttempt.id as CVarArg
             )
         } else {
-            request.predicate = NSPredicate(
-                format: "habit.id == %@ AND date >= %@ AND date < %@",
-                habitId as CVarArg,
-                startOfDay as NSDate,
-                endOfDay as NSDate
-            )
+        request.predicate = NSPredicate(
+            format: "habit.id == %@ AND date >= %@ AND date < %@",
+            habitId as CVarArg,
+            startOfDay as NSDate,
+            endOfDay as NSDate
+        )
         }
         
         do {
@@ -473,12 +481,12 @@ class HabitRepository: HabitRepositoryProtocol {
                 activeAttempt.id as CVarArg
             )
         } else {
-            request.predicate = NSPredicate(
-                format: "habit.id == %@ AND date >= %@ AND date < %@",
-                habitId as CVarArg,
-                startOfDay as NSDate,
-                endOfDay as NSDate
-            )
+        request.predicate = NSPredicate(
+            format: "habit.id == %@ AND date >= %@ AND date < %@",
+            habitId as CVarArg,
+            startOfDay as NSDate,
+            endOfDay as NSDate
+        )
         }
         
         request.sortDescriptors = [NSSortDescriptor(keyPath: \HabitCompletion.date, ascending: false)]
@@ -509,12 +517,12 @@ class HabitRepository: HabitRepositoryProtocol {
                 activeAttempt.id as CVarArg
             )
         } else {
-            request.predicate = NSPredicate(
-                format: "habit.id == %@ AND date >= %@ AND date <= %@",
-                habitId as CVarArg,
-                weekStartDate as NSDate,
-                weekEndDate as NSDate
-            )
+        request.predicate = NSPredicate(
+            format: "habit.id == %@ AND date >= %@ AND date <= %@",
+            habitId as CVarArg,
+            weekStartDate as NSDate,
+            weekEndDate as NSDate
+        )
         }
         
         request.sortDescriptors = [NSSortDescriptor(keyPath: \HabitCompletion.date, ascending: false)]
@@ -545,12 +553,12 @@ class HabitRepository: HabitRepositoryProtocol {
                 activeAttempt.id as CVarArg
             )
         } else {
-            request.predicate = NSPredicate(
-                format: "habit.id == %@ AND date >= %@ AND date <= %@",
-                habitId as CVarArg,
-                weekStartDate as NSDate,
-                weekEndDate as NSDate
-            )
+        request.predicate = NSPredicate(
+            format: "habit.id == %@ AND date >= %@ AND date <= %@",
+            habitId as CVarArg,
+            weekStartDate as NSDate,
+            weekEndDate as NSDate
+        )
         }
         
         request.sortDescriptors = [NSSortDescriptor(keyPath: \HabitCompletion.date, ascending: true)]

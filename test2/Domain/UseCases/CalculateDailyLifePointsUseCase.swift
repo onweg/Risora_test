@@ -22,9 +22,11 @@ class CalculateDailyLifePointsUseCase: CalculateDailyLifePointsUseCaseProtocol {
     }
     
     func execute(date: Date) throws -> Int {
-        let habits = habitRepository.getAllHabits()
         let calendar = Calendar.current
         let dayStart = calendar.startOfDay(for: date)
+        
+        // ВАЖНО: Используем привычки, которые были активны на тот момент (включая удаленные позже)
+        let habits = habitRepository.getAllHabitsIncludingDeleted(forDate: dayStart)
         
         // ВАЖНО: Получаем активную попытку и не считаем дни до её начала
         if let activeAttempt = gameAttemptRepository.getActiveAttempt() {
@@ -77,6 +79,14 @@ class CalculateDailyLifePointsUseCase: CalculateDailyLifePointsUseCaseProtocol {
                 }
             } else {
                 // Вредные привычки - считаем выполнения
+                
+                // ВАЖНО: Если у вредной привычки есть недельный порог (> 0), 
+                // то дневные штрафы за неё НЕ СЧИТАЕМ, чтобы не было двойного штрафа.
+                // В этом случае все штрафы будут посчитаны один раз в конце недели.
+                if habit.weeklyTarget > 0 {
+                    continue
+                }
+                
                 let completionsForDay = habitRepository.getCompletionCountForDate(habit.id, date: date)
                 let threshold = habit.dailyTarget // Порог допустимых ошибок в день
                 
