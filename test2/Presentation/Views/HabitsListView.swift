@@ -18,7 +18,7 @@ struct HabitsListView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // Календарь недели
+                // Календарь недели (без отдельного фона — только числа и сокращения)
                 WeekCalendarView(
                     weekDays: viewModel.weekDays,
                     selectedDate: viewModel.selectedDate,
@@ -84,6 +84,7 @@ struct HabitsListView: View {
                     .listStyle(PlainListStyle())
                 }
             }
+            .background(Color(uiColor: .systemGroupedBackground))
             .navigationTitle("Жизни: \(viewModel.currentLives)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

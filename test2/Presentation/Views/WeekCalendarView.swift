@@ -45,10 +45,10 @@ struct WeekCalendarView: View {
                     }
                     .frame(maxWidth: .infinity)
                 }
+                .buttonStyle(.plain)
             }
         }
         .padding(.vertical, 12)
-        .background(Color(.systemBackground))
     }
     
     private func isSelected(_ date: Date) -> Bool {

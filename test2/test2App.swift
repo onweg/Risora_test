@@ -82,6 +82,35 @@ struct test2App: App {
         
         // Очищаем badge при первом запуске
         NotificationService.shared.clearBadge()
+        
+        // Убираем голубой прямоугольник под выбранной вкладкой — выделяются только иконка и текст
+        let tabBarAppearance = UITabBarAppearance()
+        tabBarAppearance.configureWithDefaultBackground()
+        // Невыбранные вкладки — приглушённый цвет
+        tabBarAppearance.stackedLayoutAppearance.normal.iconColor = UIColor.secondaryLabel
+        tabBarAppearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.secondaryLabel]
+        // Выбранная вкладка — только иконка и текст, без фона
+        tabBarAppearance.stackedLayoutAppearance.selected.iconColor = UIColor.systemBlue
+        tabBarAppearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.systemBlue]
+        // То же для inline/compact (iPad и т.д.)
+        tabBarAppearance.inlineLayoutAppearance.normal.iconColor = UIColor.secondaryLabel
+        tabBarAppearance.inlineLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.secondaryLabel]
+        tabBarAppearance.inlineLayoutAppearance.selected.iconColor = UIColor.systemBlue
+        tabBarAppearance.inlineLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.systemBlue]
+        tabBarAppearance.compactInlineLayoutAppearance.normal.iconColor = UIColor.secondaryLabel
+        tabBarAppearance.compactInlineLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.secondaryLabel]
+        tabBarAppearance.compactInlineLayoutAppearance.selected.iconColor = UIColor.systemBlue
+        tabBarAppearance.compactInlineLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.systemBlue]
+        // Прозрачный индикатор выбора — без прямоугольника под табом
+        let size = CGSize(width: 1, height: 1)
+        UIGraphicsBeginImageContextWithOptions(size, false, 0)
+        UIColor.clear.setFill()
+        UIRectFill(CGRect(origin: .zero, size: size))
+        let clearImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        UITabBar.appearance().selectionIndicatorImage = clearImage
+        UITabBar.appearance().standardAppearance = tabBarAppearance
+        UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
     }
     
     private func updateWidgetData() {
