@@ -39,6 +39,8 @@ class CalculateDailyLifePointsUseCase: CalculateDailyLifePointsUseCaseProtocol {
         var totalXPChange = 0
         
         for habit in habits {
+            if habit.isTask { continue } // Задачи не участвуют в начислении XP
+            
             // Пропускаем привычки, которые еще не были созданы или уже удалены
             let habitCreatedDate = calendar.startOfDay(for: habit.createdAt)
             if dayStart < habitCreatedDate {
@@ -52,28 +54,19 @@ class CalculateDailyLifePointsUseCase: CalculateDailyLifePointsUseCaseProtocol {
                 }
             }
             
-            // Считаем только дневные цели (недельные считаются в конце недели)
+            // Полезные привычки: начисляем XP за выполнение (без штрафов, график не уходит в минус)
             if habit.type == .good {
-                if let targetType = habit.targetType, targetType == .daily {
+                let targetType = habit.targetType ?? .daily
+                if targetType == .daily {
                     let completionsForDay = habitRepository.getCompletionCountForDate(habit.id, date: date)
-                    let targetValue = habit.targetValue
+                    let targetValue = habit.targetValue > 0 ? habit.targetValue : 1
                     
-                    if completionsForDay == 0 && targetValue > 0 {
-                        // Штраф за 0 выполнений: 2 * xpValue этой привычки
-                        totalXPChange -= habit.xpValue * 2
-                    } else if completionsForDay > 0 && targetValue > 0 {
+                    if completionsForDay > 0 {
                         if completionsForDay >= targetValue {
-                            // Достигнута цель (3/3) → получаю xpValue
                             totalXPChange += habit.xpValue
-                        } else {
-                            // Есть выполнения, но не достигнута цель (1/3, 2/3)
-                            if habit.proportionalReward {
-                                // Процентное: получаю пропорционально (1/3 = xpValue/3, 2/3 = 2*xpValue/3)
-                                let ratio = Double(completionsForDay) / Double(targetValue)
-                                let xpEarned = Int(Double(habit.xpValue) * ratio)
-                                totalXPChange += xpEarned
-                            }
-                            // Если "все или ничего" → ничего не получаю
+                        } else if habit.proportionalReward {
+                            let ratio = Double(completionsForDay) / Double(targetValue)
+                            totalXPChange += Int(Double(habit.xpValue) * ratio)
                         }
                     }
                 }

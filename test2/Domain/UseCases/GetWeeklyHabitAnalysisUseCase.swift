@@ -30,6 +30,8 @@ class GetWeeklyHabitAnalysisUseCase: GetWeeklyHabitAnalysisUseCaseProtocol {
         var totalXPChange = 0
         
         for habit in habits {
+            if habit.isTask { continue } // Задачи не участвуют в анализе XP
+            
             var dayAnalyses: [HabitWeeklyAnalysisModel.DayAnalysis] = []
             var habitTotalImpact = 0
             var weeklyTargetImpact: Int? = nil

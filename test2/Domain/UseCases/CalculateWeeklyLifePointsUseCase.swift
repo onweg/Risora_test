@@ -41,6 +41,8 @@ class CalculateWeeklyLifePointsUseCase: CalculateWeeklyLifePointsUseCaseProtocol
         var totalXPChange = 0
         
         for habit in habits {
+            if habit.isTask { continue } // Задачи не участвуют в начислении XP
+            
             if habit.type == .good {
                 // Полезная привычка
                 let dailyCompletions = habitRepository.getDailyCompletionsForWeek(habitId: habit.id, weekStartDate: weekStartDate)

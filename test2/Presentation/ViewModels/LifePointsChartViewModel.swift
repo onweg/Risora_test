@@ -10,33 +10,37 @@ import SwiftUI
 
 @MainActor
 class LifePointsChartViewModel: ObservableObject {
+    /// Одна точка графика: дата (ось X) и кумулятивные очки на конец этого дня (ось Y).
     struct ChartPoint: Identifiable {
         let id = UUID()
-        let weekIndex: Int
-        let lives: Int
         let date: Date
+        let points: Int
     }
     
     @Published var lifePoints: [LifePointModel] = []
     @Published var chartData: [ChartPoint] = []
-    @Published var currentLives: Int = 100
     @Published var lastWeekReport: WeeklyReportModel? = nil
+
+    /// Текущее значение — кумулятивные очки на последнюю дату.
+    var currentValue: Int { chartData.last?.points ?? 0 }
     
     private let lifePointRepository: LifePointRepositoryProtocol
     private let gameStateRepository: GameStateRepositoryProtocol
     private let habitRepository: HabitRepositoryProtocol
     private let goalRepository: GoalRepositoryProtocol
     private let gameAttemptRepository: GameAttemptRepositoryProtocol
+    private let calculateDailyLifePointsUseCase: CalculateDailyLifePointsUseCaseProtocol
     private let getWeeklyHabitAnalysisUseCase: GetWeeklyHabitAnalysisUseCaseProtocol
     private let processWeekEndUseCase: ProcessWeekEndUseCaseProtocol
     private let processAllMissedWeeksUseCase: ProcessAllMissedWeeksUseCaseProtocol
-    
+
     nonisolated init(
         lifePointRepository: LifePointRepositoryProtocol,
         gameStateRepository: GameStateRepositoryProtocol,
         habitRepository: HabitRepositoryProtocol,
         goalRepository: GoalRepositoryProtocol,
         gameAttemptRepository: GameAttemptRepositoryProtocol,
+        calculateDailyLifePointsUseCase: CalculateDailyLifePointsUseCaseProtocol,
         getWeeklyHabitAnalysisUseCase: GetWeeklyHabitAnalysisUseCaseProtocol,
         processWeekEndUseCase: ProcessWeekEndUseCaseProtocol,
         processAllMissedWeeksUseCase: ProcessAllMissedWeeksUseCaseProtocol
@@ -46,6 +50,7 @@ class LifePointsChartViewModel: ObservableObject {
         self.habitRepository = habitRepository
         self.goalRepository = goalRepository
         self.gameAttemptRepository = gameAttemptRepository
+        self.calculateDailyLifePointsUseCase = calculateDailyLifePointsUseCase
         self.getWeeklyHabitAnalysisUseCase = getWeeklyHabitAnalysisUseCase
         self.processWeekEndUseCase = processWeekEndUseCase
         self.processAllMissedWeeksUseCase = processAllMissedWeeksUseCase
@@ -56,7 +61,22 @@ class LifePointsChartViewModel: ObservableObject {
     }
     
     func loadData() {
-        // Сначала обрабатываем все пропущенные недели, чтобы данные были актуальны
+        // Если нет активной попытки — создаём (график «одна жизнь с 0»)
+        if gameAttemptRepository.getActiveAttempt() == nil {
+            let calendar = Calendar.current
+            let today = Date()
+            let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)) ?? today
+            let attempt = GameAttemptModel(
+                id: UUID(),
+                startDate: weekStart,
+                endDate: nil,
+                startingLives: 0,
+                endingLives: nil,
+                isActive: true
+            )
+            try? gameAttemptRepository.createAttempt(attempt)
+        }
+        
         do {
             try processAllMissedWeeksUseCase.execute()
         } catch {
@@ -65,11 +85,6 @@ class LifePointsChartViewModel: ObservableObject {
         
         lifePoints = lifePointRepository.getAllLifePoints()
         
-        if let gameState = gameStateRepository.getGameState() {
-            currentLives = gameState.currentLives
-        }
-        
-        // Формируем данные для графика (кумулятивные жизни)
         prepareChartData()
         
         // Загружаем анализ за последнюю полностью завершенную неделю
@@ -86,24 +101,20 @@ class LifePointsChartViewModel: ObservableObject {
             return
         }
         
+        let calendar = Calendar.current
+        let startDate = calendar.startOfDay(for: activeAttempt.startDate)
+        let today = calendar.startOfDay(for: Date())
+        
         var data: [ChartPoint] = []
-        var cumulativeLives = activeAttempt.startingLives
+        var cumulative = 0
+        var day = startDate
         
-        // Точка 0: начало попытки
-        data.append(ChartPoint(
-            weekIndex: 0,
-            lives: cumulativeLives,
-            date: activeAttempt.startDate
-        ))
-        
-        // Последующие точки: результаты каждой недели
-        for (index, point) in lifePoints.enumerated() {
-            cumulativeLives += point.value
-            data.append(ChartPoint(
-                weekIndex: index + 1,
-                lives: max(0, cumulativeLives),
-                date: point.date
-            ))
+        while day <= today {
+            if let xp = try? calculateDailyLifePointsUseCase.execute(date: day) {
+                cumulative += xp
+            }
+            data.append(ChartPoint(date: day, points: max(0, cumulative)))
+            day = calendar.date(byAdding: .day, value: 1, to: day) ?? day
         }
         
         chartData = data

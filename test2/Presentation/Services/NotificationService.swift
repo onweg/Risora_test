@@ -9,7 +9,7 @@ import Foundation
 import UserNotifications
 import UIKit
 
-class NotificationService {
+class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     static let shared = NotificationService()
     
     private let notificationPhrases = [
@@ -35,7 +35,19 @@ class NotificationService {
         "Сон может подождать! Сначала проверь все привычки!"
     ]
     
-    private init() {}
+    private override init() {
+        super.init()
+        UNUserNotificationCenter.current().delegate = self
+    }
+    
+    /// Показывать уведомления баннером и со звуком, когда приложение открыто (на переднем плане).
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        if #available(iOS 14.0, *) {
+            completionHandler([.banner, .list, .sound, .badge])
+        } else {
+            completionHandler([.alert, .sound, .badge])
+        }
+    }
     
     func requestAuthorization() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
@@ -53,8 +65,8 @@ class NotificationService {
     func scheduleDailyNotification() {
         let center = UNUserNotificationCenter.current()
         
-        // Удаляем предыдущие уведомления
-        center.removeAllPendingNotificationRequests()
+        // Удаляем только общее напоминание (не трогаем habit-reminder-*)
+        center.removePendingNotificationRequests(withIdentifiers: ["daily-habit-reminder"])
         
         // Создаем уведомление на каждый день в 23:50
         let content = UNMutableNotificationContent()
@@ -135,12 +147,104 @@ class NotificationService {
         }
     }
     
+    /// Текущий статус разрешения уведомлений (для показа в UI).
+    func getAuthorizationStatus(completion: @escaping (UNAuthorizationStatus) -> Void) {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            completion(settings.authorizationStatus)
+        }
+    }
+    
+    /// Запланировать тестовое уведомление через 5 секунд. completion вызывается на главном потоке с сообщением для пользователя.
+    func scheduleTestNotification(completion: @escaping (String) -> Void) {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                switch settings.authorizationStatus {
+                case .denied:
+                    completion("Уведомления запрещены. Откройте Настройки → приложение → Уведомления и включите разрешение.")
+                    return
+                case .notDetermined:
+                    self.requestAuthorization()
+                    completion("Сначала разрешите уведомления во всплывшем запросе, затем нажмите тест снова.")
+                    return
+                case .authorized, .provisional, .ephemeral:
+                    break
+                @unknown default:
+                    completion("Неизвестный статус уведомлений.")
+                    return
+                }
+                
+                let content = UNMutableNotificationContent()
+                content.title = "Тест уведомлений"
+                content.body = "Если вы видите это — уведомления работают! ✅"
+                content.sound = .default
+                
+                let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
+                let request = UNNotificationRequest(identifier: "test-notification-\(UUID().uuidString)", content: content, trigger: trigger)
+                
+                UNUserNotificationCenter.current().add(request) { error in
+                    DispatchQueue.main.async {
+                        if let error = error {
+                            completion("Ошибка: \(error.localizedDescription)")
+                        } else {
+                            completion("Через 5 секунд придёт тестовое уведомление. Сверните приложение или заблокируйте экран и подождите. Если не пришло — проверьте режим «Не беспокоить» и Фокус.")
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /// Открывает настройки приложения (раздел «Уведомления»). Вызвать, если уведомления не приходят.
+    func openAppNotificationSettings() {
+        DispatchQueue.main.async {
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(url)
+            }
+        }
+    }
+    
     func clearBadge() {
         // Очищаем badge на иконке приложения
         // Используем главный поток для обновления UI
         DispatchQueue.main.async {
             UIApplication.shared.applicationIconBadgeNumber = 0
             print("Badge cleared successfully")
+        }
+    }
+    
+    /// Планирует напоминания для привычек с заданным временем. Уведомление приходит только в те дни недели, когда привычка/задача активна (например, только в среду в 19:00, а не каждый день).
+    func rescheduleHabitReminders(habits: [HabitModel]) {
+        let center = UNUserNotificationCenter.current()
+        center.getPendingNotificationRequests { requests in
+            let toRemove = requests.filter { $0.identifier.hasPrefix("habit-reminder-") }.map(\.identifier)
+            center.removePendingNotificationRequests(withIdentifiers: toRemove)
+            
+            for habit in habits {
+                guard habit.hasNotification, let h = habit.notificationHour, let m = habit.notificationMinute else { continue }
+                let weekdays = habit.activeWeekdays.isEmpty ? Set(1...7) : habit.activeWeekdays
+                let content = UNMutableNotificationContent()
+                content.title = habit.isTask ? "Задача: \(habit.name)" : "Привычка: \(habit.name)"
+                content.body = "Напоминание в \(String(format: "%d:%02d", h, m))"
+                content.sound = .default
+                
+                for weekday in weekdays {
+                    var dateComponents = DateComponents()
+                    dateComponents.weekday = weekday
+                    dateComponents.hour = h
+                    dateComponents.minute = m
+                    let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+                    let request = UNNotificationRequest(
+                        identifier: "habit-reminder-\(habit.id.uuidString)-\(weekday)",
+                        content: content,
+                        trigger: trigger
+                    )
+                    center.add(request) { error in
+                        if let error = error {
+                            print("Error scheduling habit reminder \(habit.name) weekday \(weekday): \(error)")
+                        }
+                    }
+                }
+            }
         }
     }
 }

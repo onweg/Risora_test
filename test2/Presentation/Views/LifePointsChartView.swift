@@ -19,7 +19,7 @@ struct LifePointsChartView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    currentLivesSection
+                    currentValueSection
                     
                     if viewModel.chartData.isEmpty && viewModel.lastWeekReport == nil {
                         emptyStateSection
@@ -32,7 +32,7 @@ struct LifePointsChartView: View {
                 }
                 .padding()
             }
-            .navigationTitle("График жизней")
+            .navigationTitle("График")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
                 viewModel.loadData()
@@ -42,14 +42,14 @@ struct LifePointsChartView: View {
     
     // MARK: - Subviews
     
-    private var currentLivesSection: some View {
+    private var currentValueSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Текущие жизни")
+            Text("Текущее значение")
                 .font(.headline)
                 .foregroundColor(.secondary)
-            Text("\(viewModel.currentLives)")
+            Text("\(viewModel.currentValue)")
                 .font(.system(size: 48, weight: .bold))
-                .foregroundColor(viewModel.currentLives > 0 ? .primary : .red)
+                .foregroundColor(.primary)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -76,32 +76,40 @@ struct LifePointsChartView: View {
     
     private var chartSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("График прогресса")
+            Text("Рост по дням")
                 .font(.headline)
+            Text("Горизонтально — даты, вертикально — накопленные очки")
+                .font(.caption)
+                .foregroundColor(.secondary)
             
             Chart {
                 ForEach(viewModel.chartData) { point in
                     LineMark(
-                        x: .value("Неделя", point.weekIndex),
-                        y: .value("Жизни", point.lives)
+                        x: .value("День", point.date),
+                        y: .value("Очки", point.points)
                     )
                     .foregroundStyle(.blue)
                     .interpolationMethod(.catmullRom)
                     
                     PointMark(
-                        x: .value("Неделя", point.weekIndex),
-                        y: .value("Жизни", point.lives)
+                        x: .value("День", point.date),
+                        y: .value("Очки", point.points)
                     )
                     .foregroundStyle(.blue)
                 }
             }
-            .frame(height: 300)
+            .frame(height: 280)
             .chartYAxis {
-                AxisMarks(position: .leading)
+                AxisMarks(position: .leading, values: .automatic(desiredCount: 6))
             }
             .chartXAxis {
-                AxisMarks { _ in
-                    AxisValueLabel()
+                AxisMarks(values: .stride(by: .day, count: 7)) { value in
+                    if let date = value.as(Date.self) {
+                        AxisValueLabel {
+                            Text(date, format: .dateTime.day().month(.abbreviated))
+                                .font(.caption2)
+                        }
+                    }
                 }
             }
         }

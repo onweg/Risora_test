@@ -23,7 +23,8 @@ class GetHabitsForDayUseCase: GetHabitsForDayUseCaseProtocol {
         let today = calendar.startOfDay(for: Date())
         let selectedDate = calendar.startOfDay(for: date)
         
-        let canEdit = calendar.isDate(selectedDate, inSameDayAs: today)
+        // Редактировать выполнение можно для любой выбранной даты (не только сегодня)
+        let canEdit = true
         
         // Получаем начало недели для подсчета прогресса за неделю
         let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date))!
@@ -45,6 +46,20 @@ class GetHabitsForDayUseCase: GetHabitsForDayUseCaseProtocol {
                 if habitCreatedDate > selectedDate {
                     return nil // Привычка создана после выбранной даты, не показываем для прошлых дней
                 }
+            }
+            
+            // День недели: 1 = воскресенье, 2 = понедельник, ... 7 = суббота
+            let weekday = calendar.component(.weekday, from: date)
+            if !habit.activeWeekdays.contains(weekday) {
+                return nil // Привычка не активна в этот день недели
+            }
+            
+            let effectiveStart = habit.startDate ?? habit.createdAt
+            if calendar.startOfDay(for: selectedDate) < calendar.startOfDay(for: effectiveStart) {
+                return nil // Ещё не началась
+            }
+            if let end = habit.endDate, calendar.startOfDay(for: selectedDate) > calendar.startOfDay(for: end) {
+                return nil // Уже закончилась
             }
             
             let isCompleted = completedHabitIds.contains(habit.id)

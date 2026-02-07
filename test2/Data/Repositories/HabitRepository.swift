@@ -12,6 +12,7 @@ protocol HabitRepositoryProtocol {
     func getAllHabits() -> [HabitModel] // Только активные (не удаленные до сегодня)
     func getAllHabitsIncludingDeleted(forDate: Date) -> [HabitModel] // Все привычки для конкретной даты (включая удаленные позже)
     func createHabit(_ habit: HabitModel) throws
+    func updateHabit(_ habit: HabitModel) throws
     func deleteHabit(_ id: UUID) throws
     func getCompletionsForWeek(weekStartDate: Date) -> [UUID: [Date]]
     func getCompletionCountForWeek(habitId: UUID, weekStartDate: Date) -> Int
@@ -29,6 +30,7 @@ protocol HabitRepositoryProtocol {
     func updateHabitOrder(habitIds: [UUID]) throws // Обновляет порядок привычек
     func getAllHabitsRaw() -> [HabitModel] // Возвращает ВООБЩЕ ВСЕ привычки из базы
     func hardDeleteHabit(_ habitId: UUID) throws // Удаляет запись навсегда из базы
+    func deleteAllHabits() throws // Удаляет все привычки и их выполнения из базы
     func setGameAttemptRepository(_ repository: GameAttemptRepositoryProtocol) // Устанавливает репозиторий попыток
 }
 
@@ -64,21 +66,7 @@ class HabitRepository: HabitRepositoryProtocol {
                     }
                 }
                 
-                return HabitModel(
-                    id: habit.id ?? UUID(),
-                    name: habit.name ?? "",
-                    type: HabitType(rawValue: habit.type ?? "good") ?? .good,
-                    frequency: nil, // Deprecated field, not stored in Core Data
-                    frequencyCount: 0, // Deprecated field, not stored in Core Data
-                    xpValue: Int(habit.xpValue),
-                    createdAt: habit.createdAt ?? Date(),
-                    targetType: habit.targetType != nil ? HabitTargetType(rawValue: habit.targetType!) : nil,
-                    targetValue: Int(habit.targetValue),
-                    dailyTarget: Int(habit.dailyTarget),
-                    weeklyTarget: Int(habit.weeklyTarget),
-                    proportionalReward: habit.proportionalReward,
-                    sortOrder: Int(habit.sortOrder)
-                )
+                return mapHabitToModel(habit)
             }
         } catch {
             print("Error fetching habits: \(error)")
@@ -114,21 +102,7 @@ class HabitRepository: HabitRepositoryProtocol {
                     }
                 }
                 
-                return HabitModel(
-                    id: habit.id ?? UUID(),
-                    name: habit.name ?? "",
-                    type: HabitType(rawValue: habit.type ?? "good") ?? .good,
-                    frequency: nil,
-                    frequencyCount: 0,
-                    xpValue: Int(habit.xpValue),
-                    createdAt: habit.createdAt ?? Date(),
-                    targetType: habit.targetType != nil ? HabitTargetType(rawValue: habit.targetType!) : nil,
-                    targetValue: Int(habit.targetValue),
-                    dailyTarget: Int(habit.dailyTarget),
-                    weeklyTarget: Int(habit.weeklyTarget),
-                    proportionalReward: habit.proportionalReward,
-                    sortOrder: Int(habit.sortOrder)
-                )
+                return mapHabitToModel(habit)
             }
         } catch {
             print("Error fetching habits: \(error)")
@@ -160,13 +134,52 @@ class HabitRepository: HabitRepositoryProtocol {
         habitEntity.weeklyTarget = Int16(habit.weeklyTarget)
         habitEntity.proportionalReward = habit.proportionalReward
         habitEntity.sortOrder = Int32(maxSortOrder + 1)
+        habitEntity.activeWeekdayNumbers = habit.activeWeekdays.sorted().map(String.init).joined(separator: ",")
+        habitEntity.startDate = habit.startDate
+        habitEntity.endDate = habit.endDate
+        habitEntity.themeId = habit.themeId
+        habitEntity.notificationHour = Int16(habit.notificationHour ?? -1)
+        habitEntity.notificationMinute = Int16(habit.notificationMinute ?? -1)
+        habitEntity.allowedStartHour = Int16(habit.allowedStartHour ?? -1)
+        habitEntity.allowedStartMinute = Int16(habit.allowedStartMinute ?? -1)
+        habitEntity.allowedEndHour = Int16(habit.allowedEndHour ?? -1)
+        habitEntity.allowedEndMinute = Int16(habit.allowedEndMinute ?? -1)
+        habitEntity.setValue(habit.isTask, forKey: "isTask")
         
         try context.save()
         
-        // Привычка создается пустой (0/3, 0/1 и т.д.)
-        // Пользователь сам будет отмечать выполнения
+        // Привычка создается пустая
     }
-    
+
+    func updateHabit(_ habit: HabitModel) throws {
+        let request: NSFetchRequest<Habit> = Habit.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", habit.id as CVarArg)
+        guard let entity = try context.fetch(request).first else {
+            throw NSError(domain: "HabitRepository", code: 404, userInfo: [NSLocalizedDescriptionKey: "Habit not found"])
+        }
+        entity.name = habit.name
+        entity.type = habit.type.rawValue
+        entity.xpValue = Int16(habit.xpValue)
+        entity.targetType = habit.targetType?.rawValue
+        entity.targetValue = Int16(habit.targetValue)
+        entity.dailyTarget = Int16(habit.dailyTarget)
+        entity.weeklyTarget = Int16(habit.weeklyTarget)
+        entity.proportionalReward = habit.proportionalReward
+        entity.activeWeekdayNumbers = habit.activeWeekdays.sorted().map(String.init).joined(separator: ",")
+        entity.startDate = habit.startDate
+        entity.endDate = habit.endDate
+        entity.themeId = habit.themeId
+        entity.notificationHour = Int16(habit.notificationHour ?? -1)
+        entity.notificationMinute = Int16(habit.notificationMinute ?? -1)
+        entity.allowedStartHour = Int16(habit.allowedStartHour ?? -1)
+        entity.allowedStartMinute = Int16(habit.allowedStartMinute ?? -1)
+        entity.allowedEndHour = Int16(habit.allowedEndHour ?? -1)
+        entity.allowedEndMinute = Int16(habit.allowedEndMinute ?? -1)
+        entity.setValue(habit.isTask, forKey: "isTask")
+        entity.sortOrder = Int32(habit.sortOrder)
+        try context.save()
+    }
+
     func deleteHabit(_ id: UUID) throws {
         let request: NSFetchRequest<Habit> = Habit.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
@@ -631,27 +644,65 @@ class HabitRepository: HabitRepositoryProtocol {
     
     func getAllHabitsRaw() -> [HabitModel] {
         let request: NSFetchRequest<Habit> = Habit.fetchRequest()
+        request.sortDescriptors = [
+            NSSortDescriptor(keyPath: \Habit.sortOrder, ascending: true),
+            NSSortDescriptor(keyPath: \Habit.createdAt, ascending: true)
+        ]
         do {
             let habits = try context.fetch(request)
-            return habits.map { habit in
-                HabitModel(
-                    id: habit.id ?? UUID(),
-                    name: habit.name ?? "Без названия",
-                    type: HabitType(rawValue: habit.type ?? "good") ?? .good,
-                    xpValue: Int(habit.xpValue),
-                    createdAt: habit.createdAt ?? Date(),
-                    targetType: habit.targetType != nil ? HabitTargetType(rawValue: habit.targetType!) : nil,
-                    targetValue: Int(habit.targetValue),
-                    dailyTarget: Int(habit.dailyTarget),
-                    weeklyTarget: Int(habit.weeklyTarget),
-                    proportionalReward: habit.proportionalReward,
-                    sortOrder: Int(habit.sortOrder)
-                )
-            }
+            return habits.map { mapHabitToModel($0) }
         } catch {
             print("Error fetching raw habits: \(error)")
             return []
         }
+    }
+    
+    private func mapHabitToModel(_ habit: Habit) -> HabitModel {
+        let activeWeekdays: Set<Int> = {
+            guard let s = habit.activeWeekdayNumbers, !s.isEmpty else {
+                return [1, 2, 3, 4, 5, 6, 7]
+            }
+            let parts = s.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
+            return Set(parts.filter { (1...7).contains($0) })
+        }()
+        let notifHour = Int(habit.notificationHour)
+        let notifMin = Int(habit.notificationMinute)
+        return HabitModel(
+            id: habit.id ?? UUID(),
+            name: habit.name ?? "",
+            type: HabitType(rawValue: habit.type ?? "good") ?? .good,
+            frequency: nil,
+            frequencyCount: 0,
+            xpValue: Int(habit.xpValue),
+            isTask: (habit.value(forKey: "isTask") as? NSNumber)?.boolValue ?? false,
+            createdAt: habit.createdAt ?? Date(),
+            targetType: habit.targetType != nil ? HabitTargetType(rawValue: habit.targetType!) : nil,
+            targetValue: Int(habit.targetValue),
+            dailyTarget: Int(habit.dailyTarget),
+            weeklyTarget: Int(habit.weeklyTarget),
+            proportionalReward: habit.proportionalReward,
+            sortOrder: Int(habit.sortOrder),
+            activeWeekdays: activeWeekdays.isEmpty ? [1, 2, 3, 4, 5, 6, 7] : activeWeekdays,
+            startDate: habit.startDate,
+            endDate: habit.endDate,
+            themeId: habit.themeId,
+            notificationHour: (notifHour >= 0 && notifHour <= 23) ? notifHour : nil,
+            notificationMinute: (notifMin >= 0 && notifMin <= 59) ? notifMin : nil,
+            allowedStartHour: optionalHour(habit.allowedStartHour),
+            allowedStartMinute: optionalMinute(habit.allowedStartMinute),
+            allowedEndHour: optionalHour(habit.allowedEndHour),
+            allowedEndMinute: optionalMinute(habit.allowedEndMinute)
+        )
+    }
+    
+    private func optionalHour(_ value: Int16) -> Int? {
+        let v = Int(value)
+        return (v >= 0 && v <= 23) ? v : nil
+    }
+    
+    private func optionalMinute(_ value: Int16) -> Int? {
+        let v = Int(value)
+        return (v >= 0 && v <= 59) ? v : nil
     }
     
     func hardDeleteHabit(_ habitId: UUID) throws {
@@ -663,6 +714,20 @@ class HabitRepository: HabitRepositoryProtocol {
             try context.save()
             print("Habit \(habitId) hard deleted")
         }
+    }
+    
+    func deleteAllHabits() throws {
+        let completionRequest: NSFetchRequest<HabitCompletion> = HabitCompletion.fetchRequest()
+        let completions = try context.fetch(completionRequest)
+        for c in completions {
+            context.delete(c)
+        }
+        let habitRequest: NSFetchRequest<Habit> = Habit.fetchRequest()
+        let habits = try context.fetch(habitRequest)
+        for habit in habits {
+            context.delete(habit)
+        }
+        try context.save()
     }
 }
 

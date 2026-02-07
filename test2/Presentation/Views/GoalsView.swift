@@ -10,6 +10,7 @@ import SwiftUI
 struct GoalsView: View {
     @StateObject private var viewModel: GoalsViewModel
     @State private var showingAddGoal = false
+    @State private var goalToEdit: GoalModel?
     
     init(viewModel: GoalsViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -40,7 +41,8 @@ struct GoalsView: View {
                                     existingHabitIds: viewModel.getExistingHabitIds(from: goal.relatedHabitIds),
                                     onGetHabitName: { habitId in
                                         viewModel.getHabitName(for: habitId)
-                                    }
+                                    },
+                                    onTap: { goalToEdit = goal }
                                 )
                             }
                             .onMove(perform: viewModel.moveGoal)
@@ -71,6 +73,11 @@ struct GoalsView: View {
         }) {
             AddGoalView(viewModel: viewModel)
         }
+        .sheet(item: $goalToEdit, onDismiss: {
+            viewModel.refresh()
+        }) { goal in
+            AddGoalView(viewModel: viewModel, editingGoal: goal)
+        }
         .onAppear {
             viewModel.loadData()
         }
@@ -95,6 +102,7 @@ struct GoalRowView: View {
     let goal: GoalModel
     let existingHabitIds: [UUID]
     let onGetHabitName: (UUID) -> String
+    var onTap: (() -> Void)? = nil
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -138,6 +146,10 @@ struct GoalRowView: View {
             }
         }
         .padding(.vertical, 8)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap?()
+        }
     }
 }
 
@@ -145,9 +157,25 @@ struct AddGoalView: View {
     @ObservedObject var viewModel: GoalsViewModel
     @Environment(\.dismiss) var dismiss
     
-    @State private var title: String = ""
-    @State private var motivation: String = ""
-    @State private var selectedHabitIds: Set<UUID> = []
+    let editingGoal: GoalModel?
+    
+    init(viewModel: GoalsViewModel, editingGoal: GoalModel? = nil) {
+        self.viewModel = viewModel
+        self.editingGoal = editingGoal
+        if let g = editingGoal {
+            _title = State(initialValue: g.title)
+            _motivation = State(initialValue: g.motivation)
+            _selectedHabitIds = State(initialValue: Set(g.relatedHabitIds))
+        } else {
+            _title = State(initialValue: "")
+            _motivation = State(initialValue: "")
+            _selectedHabitIds = State(initialValue: [])
+        }
+    }
+    
+    @State private var title: String
+    @State private var motivation: String
+    @State private var selectedHabitIds: Set<UUID>
     
     private var allHabits: [HabitModel] {
         return viewModel.getAllHabits()
@@ -210,7 +238,7 @@ struct AddGoalView: View {
                     }
                 }
             }
-            .navigationTitle("Новая цель")
+            .navigationTitle(editingGoal == nil ? "Новая цель" : "Редактировать цель")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -221,11 +249,23 @@ struct AddGoalView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Сохранить") {
                         if !title.isEmpty && !motivation.isEmpty {
-                            viewModel.createGoal(
-                                title: title,
-                                motivation: motivation,
-                                relatedHabitIds: Array(selectedHabitIds)
-                            )
+                            if let goal = editingGoal {
+                                let updated = GoalModel(
+                                    id: goal.id,
+                                    title: title,
+                                    motivation: motivation,
+                                    relatedHabitIds: Array(selectedHabitIds),
+                                    createdAt: goal.createdAt,
+                                    sortOrder: goal.sortOrder
+                                )
+                                viewModel.updateGoal(updated)
+                            } else {
+                                viewModel.createGoal(
+                                    title: title,
+                                    motivation: motivation,
+                                    relatedHabitIds: Array(selectedHabitIds)
+                                )
+                            }
                             dismiss()
                         }
                     }

@@ -32,6 +32,10 @@ class DependencyContainer {
         GoalRepository(context: context)
     }()
     
+    lazy var themeRepository: ThemeRepositoryProtocol = {
+        ThemeRepository(context: context)
+    }()
+    
     lazy var gameAttemptRepository: GameAttemptRepositoryProtocol = {
         GameAttemptRepository(context: context)
     }()
@@ -90,7 +94,15 @@ class DependencyContainer {
     lazy var deleteHabitCompletionsUseCase: DeleteHabitCompletionsUseCaseProtocol = {
         DeleteHabitCompletionsUseCase(habitRepository: habitRepository, goalRepository: goalRepository)
     }()
-    
+
+    lazy var deleteAllHabitsUseCase: DeleteAllHabitsUseCaseProtocol = {
+        DeleteAllHabitsUseCase(habitRepository: habitRepository, goalRepository: goalRepository)
+    }()
+
+    lazy var deleteHabitUseCase: DeleteHabitUseCaseProtocol = {
+        DeleteHabitUseCase(habitRepository: habitRepository, goalRepository: goalRepository)
+    }()
+
     lazy var checkGameOverUseCase: CheckGameOverUseCaseProtocol = {
         CheckGameOverUseCase(gameStateRepository: gameStateRepository)
     }()
@@ -134,7 +146,10 @@ class DependencyContainer {
             setHabitCompletionCountUseCase: setHabitCompletionCountUseCase,
             removeHabitCompletionUseCase: removeHabitCompletionUseCase,
             deleteHabitCompletionsUseCase: deleteHabitCompletionsUseCase,
+            deleteAllHabitsUseCase: deleteAllHabitsUseCase,
+            deleteHabitUseCase: deleteHabitUseCase,
             habitRepository: habitRepository,
+            themeRepository: themeRepository,
             gameStateRepository: gameStateRepository,
             processAllMissedWeeksUseCase: processAllMissedWeeksUseCase
         )
@@ -147,14 +162,15 @@ class DependencyContainer {
             habitRepository: habitRepository,
             goalRepository: goalRepository,
             gameAttemptRepository: gameAttemptRepository,
+            calculateDailyLifePointsUseCase: calculateDailyLifePointsUseCase,
             getWeeklyHabitAnalysisUseCase: getWeeklyHabitAnalysisUseCase,
             processWeekEndUseCase: processWeekEndUseCase,
             processAllMissedWeeksUseCase: processAllMissedWeeksUseCase
         )
     }
     
-    func makeAddHabitViewModel() -> AddHabitViewModel {
-        AddHabitViewModel(habitRepository: habitRepository)
+    func makeAddHabitViewModel(editingHabit: HabitModel? = nil) -> AddHabitViewModel {
+        AddHabitViewModel(habitRepository: habitRepository, themeRepository: themeRepository, editingHabit: editingHabit)
     }
     
     func makeGoalsViewModel() -> GoalsViewModel {
